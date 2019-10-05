@@ -624,7 +624,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.89502895, b: 0.2688679, a: 1}
-  m_Intensity: 0.21663994
+  m_Intensity: 3.1830988
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208

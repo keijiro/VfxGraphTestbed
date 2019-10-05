@@ -1,11 +1,21 @@
 {
+  "scopedRegistries": [
+    {
+      "name": "Keijiro",
+      "url": "https://registry.npmjs.com",
+      "scopes": [
+        "jp.keijiro"
+      ]
+    }
+  ],
   "dependencies": {
     "com.unity.render-pipelines.high-definition": "7.1.2",
-    "com.unity.test-framework": "1.1.2",
-    "com.unity.timeline": "1.2.2",
+    "com.unity.timeline": "1.2.3",
+    "jp.keijiro.kino.post-processing": "2.0.1",
     "com.unity.modules.animation": "1.0.0",
     "com.unity.modules.director": "1.0.0",
     "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.particlesystem": "1.0.0",
     "com.unity.modules.physics": "1.0.0",
     "com.unity.modules.physics2d": "1.0.0",
     "com.unity.modules.ui": "1.0.0",
