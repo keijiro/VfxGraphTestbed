@@ -74,7 +74,7 @@ MonoBehaviour:
   template:
     positionAmount: {x: 5, y: 3, z: 2}
     rotationAmount: {x: 0, y: 0, z: 0}
-    frequency: 0.14
+    frequency: 0.24
     octaves: 1
     randomSeed: 353
 --- !u!114 &6461638146955788930
