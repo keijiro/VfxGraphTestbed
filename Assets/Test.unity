@@ -416,7 +416,7 @@ VisualEffect:
       - m_Value: 0
         m_Name: Force
         m_Overridden: 1
-      - m_Value: 0.5
+      - m_Value: 1
         m_Name: Spawn Rate
         m_Overridden: 1
     m_Vector2f:
