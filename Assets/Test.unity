@@ -375,7 +375,6 @@ VFXRenderer:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
-  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -422,10 +421,10 @@ VisualEffect:
       - m_Value: {x: 90, y: 90, z: 90}
         m_Name: Attractor
         m_Overridden: 1
-      - m_Value: {x: 346.21133, y: 165.69011, z: 68.68017}
+      - m_Value: {x: -0, y: 0, z: 0}
         m_Name: Target_angles
         m_Overridden: 1
-      - m_Value: {x: -0.88217866, y: -1.7039369, z: -0.2997938}
+      - m_Value: {x: 2.8187537, y: -1.2955327, z: 0.5421909}
         m_Name: Target_position
         m_Overridden: 1
       - m_Value: {x: 1, y: 1, z: 1}
@@ -733,7 +732,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2041281621}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -16}
+  m_LocalPosition: {x: 0, y: 0, z: -22}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
