@@ -311,7 +311,9 @@ MonoBehaviour:
   materialQualityLevels: -1
   m_CurrentMaterialQualityLevel: 4
   diffusionProfileSettings: {fileID: 0}
-  diffusionProfileSettingsList: []
+  diffusionProfileSettingsList:
+  - {fileID: 11400000, guid: 404820c4cf36ad944862fa59c56064f0, type: 2}
+  - {fileID: 11400000, guid: 2384dbf2c1c420f45a792fbc315fbfb1, type: 2}
   beforeTransparentCustomPostProcesses: []
   beforePostProcessCustomPostProcesses:
   - Kino.PostProcessing.Streak, Kino.Postprocessing, Version=0.0.0.0, Culture=neutral,
