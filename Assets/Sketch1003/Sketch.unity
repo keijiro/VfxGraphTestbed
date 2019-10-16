@@ -337,13 +337,14 @@ VFXRenderer:
   m_CastShadows: 1
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
-  m_MotionVectors: 0
+  m_MotionVectors: 1
   m_LightProbeUsage: 0
   m_ReflectionProbeUsage: 0
   m_RayTracingMode: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   m_StaticBatchInfo:
@@ -382,14 +383,17 @@ VisualEffect:
   m_PropertySheet:
     m_Float:
       m_Array:
-      - m_Value: 0
+      - m_Value: 1
         m_Name: Force
+        m_Overridden: 1
+      - m_Value: 0
+        m_Name: Eraser_radius
         m_Overridden: 1
     m_Vector2f:
       m_Array: []
     m_Vector3f:
       m_Array:
-      - m_Value: {x: 0, y: 0, z: 0}
+      - m_Value: {x: -2.5, y: 0, z: 0}
         m_Name: Attractor
         m_Overridden: 1
     m_Vector4f:
@@ -624,7 +628,7 @@ Light:
   m_Type: 2
   m_Shape: 0
   m_Color: {r: 1, g: 0.89502895, b: 0.2688679, a: 1}
-  m_Intensity: 3.1830988
+  m_Intensity: 0
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
