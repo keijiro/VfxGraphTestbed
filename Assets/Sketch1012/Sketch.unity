@@ -144,7 +144,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 428533720}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 0.32007626}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -189,6 +189,7 @@ VFXRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
+  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -238,10 +239,10 @@ VisualEffect:
       - m_Value: {x: 90, y: 90, z: 90}
         m_Name: Attractor
         m_Overridden: 1
-      - m_Value: {x: 85.143524, y: 129.70985, z: 250.39432}
+      - m_Value: {x: -0, y: 0, z: 0}
         m_Name: Target_angles
         m_Overridden: 1
-      - m_Value: {x: -1.3328516, y: -0.2159218, z: 0.43347114}
+      - m_Value: {x: 0, y: 0, z: 0}
         m_Name: Target_position
         m_Overridden: 1
       - m_Value: {x: 1, y: 1, z: 1}
@@ -334,7 +335,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1026084124}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 0.67853576}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: -1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -364,7 +365,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1044165350}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 0.67977}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
@@ -443,6 +444,7 @@ VFXRenderer:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -489,10 +491,10 @@ VisualEffect:
       - m_Value: {x: 90, y: 90, z: 90}
         m_Name: Attractor
         m_Overridden: 1
-      - m_Value: {x: 349.1384, y: 304.3937, z: 286.62463}
+      - m_Value: {x: -0, y: 0, z: 0}
         m_Name: Target_angles
         m_Overridden: 1
-      - m_Value: {x: -2.0514896, y: 1.1839969, z: 1.1842558}
+      - m_Value: {x: 0, y: 0, z: 0}
         m_Name: Target_position
         m_Overridden: 1
       - m_Value: {x: 1, y: 1, z: 1}
@@ -707,6 +709,7 @@ VFXRenderer:
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -753,10 +756,10 @@ VisualEffect:
       - m_Value: {x: 90, y: 90, z: 90}
         m_Name: Attractor
         m_Overridden: 1
-      - m_Value: {x: 80.20535, y: 115.1243, z: 95.98905}
+      - m_Value: {x: -0, y: 0, z: 0}
         m_Name: Target_angles
         m_Overridden: 1
-      - m_Value: {x: -1.4849924, y: -0.77102107, z: -1.1797397}
+      - m_Value: {x: 0, y: 0, z: 0}
         m_Name: Target_position
         m_Overridden: 1
       - m_Value: {x: 1, y: 1, z: 1}
