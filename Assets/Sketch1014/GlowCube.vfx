@@ -621,7 +621,7 @@ VisualEffectResource:
       1\n#define VFX_USE_SEED_CURRENT 1\n#define VFX_USE_SIZE_CURRENT 1\n#define
       VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_USE_VELOCITY_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT
       1\n#define VFX_USE_AGE_CURRENT 1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float uniform_b;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n   
+      float uniform_a;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float3 position;\n    float lifetime;\n    uint seed;\n    float size;\n   
       uint particleId;\n    float3 velocity;\n    bool alive;\n    float age;\n};\n\nstruct
       SourceAttributes\n{\n};\n\n\n\r\n\r\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT
@@ -675,18 +675,19 @@ VisualEffectResource:
       0);\n        attributes.alive = (bool)true;\n        attributes.age = (float)0;\n       
       \n\r\n#if VFX_USE_PARTICLEID_CURRENT\r\n         attributes.particleId = particleIndex;\r\n#endif\r\n#if
       VFX_USE_SEED_CURRENT\r\n        attributes.seed = WangHash(particleIndex ^
-      systemSeed);\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
+      systemSeed);\r\n#endif\r\n#if VFX_USE_SPAWNINDEX_CURRENT\r\n        attributes.spawnIndex
+      = id;\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
       uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex = min(stripIndex,
       STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex, stripIndex))\r\n           
       return;\r\n\r\n        const StripData stripData = GetStripDataFromStripIndex(stripIndex,
       PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex, attributes,
       stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic on random
       with strip\r\n#endif\r\n        \r\n        {\n            uint tmp_z = attributes.particleId
-      * (uint)2;\n            uint tmp_ba = tmp_z ^ asuint(uniform_b);\n           
+      * (uint)2;\n            uint tmp_ba = tmp_z ^ asuint(uniform_a);\n           
       uint tmp_bb = attributes.particleId ^ tmp_ba;\n            float tmp_bc = FixedRand(tmp_bb);\n           
       float tmp_be = tmp_bc * (float)6.28318548;\n            float tmp_bf = cos(tmp_be);\n           
       float tmp_bg = sin(tmp_be);\n            float2 tmp_bh = float2(tmp_bf, tmp_bg);\n           
-      uint tmp_bl = tmp_z + (uint)1;\n            uint tmp_bm = tmp_bl ^ asuint(uniform_b);\n           
+      uint tmp_bl = tmp_z + (uint)1;\n            uint tmp_bm = tmp_bl ^ asuint(uniform_a);\n           
       uint tmp_bn = attributes.particleId ^ tmp_bm;\n            float tmp_bo = FixedRand(tmp_bn);\n           
       float tmp_bq = tmp_bo * (float)2;\n            float tmp_br = (float)-1 + tmp_bq;\n           
       float tmp_bs = tmp_br * tmp_br;\n            float tmp_bt = (float)1 - tmp_bs;\n           
@@ -731,7 +732,7 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
       Turbulence_18D(float3 position, inout float3 velocity, float mass, float4x4
       InvFieldTransform, float4x4 FieldTransform, float Intensity, float Drag, float
-      frequency, float roughness, float lacunarity, int octaves, float deltaTime)
+      frequency, int octaves, float roughness, float lacunarity, float deltaTime)
       /*Mode:Relative NoiseType:Value */\n{\n    float3 vectorFieldCoord = mul(InvFieldTransform,
       float4(position,1.0f)).xyz;\n    \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord
       + 0.5f, frequency, octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
@@ -757,7 +758,7 @@ VisualEffectResource:
       PARTICLE_PER_STRIP_COUNT);\r\n            InitStripAttributes(index, attributes,
       stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_a, FieldTransform_a,
-      (float)1, (float)1, (float)5, (float)0.5, (float)2, (int)1, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
+      (float)1, (float)1, (float)5, (int)1, (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\t\n\r\n\r\n\t\t\tif (attributes.alive)\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store3((index
@@ -787,8 +788,8 @@ VisualEffectResource:
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
-      InvFieldTransform_a, FieldTransform_a, (float)1, (float)1, (float)5, (float)0.5,
-      (float)2, (int)1, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout */attributes.position,
+      InvFieldTransform_a, FieldTransform_a, (float)1, (float)1, (float)5, (int)1,
+      (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\tEulerIntegration( /*inout */attributes.position,
       attributes.velocity, deltaTime_a);\n\t\tAge( /*inout */attributes.age, deltaTime_a);\n\t\tReap(attributes.age,
       attributes.lifetime,  /*inout */attributes.alive);\n\t\t\n\r\n\t\tattributeBuffer.Store3((index
       * 0x8 + 0x0) << 2,asuint(attributes.position));\n\t\tattributeBuffer.Store3((index
@@ -822,7 +823,7 @@ VisualEffectResource:
       1\n\t\t#define SHADERGRAPH_NEEDS_NORMAL_GBUFFER 1\n\t\t#define SHADERGRAPH_NEEDS_TANGENT_GBUFFER
       1\n\t\t#define SHADERGRAPH_NEEDS_NORMAL_FORWARD 1\n\t\t#define SHADERGRAPH_NEEDS_TANGENT_FORWARD
       1\n\t\t#define SHADERGRAPH_NEEDS_NORMAL_DEPTHONLY 1\n\t\t#define SHADERGRAPH_NEEDS_TANGENT_DEPTHONLY
-      1\n\t\t#define HDRP_LIT 1\n\t\t#define IS_OPAQUE_NOT_SIMPLE_LIT_PARTICLE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      1\n\t\t#define HDRP_LIT 1\n\t\t#define IS_OPAQUE_NOT_SIMPLE_LIT_PARTICLE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
       float4 Size_a;\n\t\t    float currentFrameIndex;\n\t\t    uint3 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float3 position;\n\t\t    float lifetime;\n\t\t   
@@ -863,10 +864,10 @@ VisualEffectResource:
       tangent : TEXCOORD5;\n\t\t\t\t#endif\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if
       VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious :
       TEXCOORD6;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD7;\n\t\t\t\t#endif\n\t\t\t   
-      nointerpolation float4 _BaseColor : NORMAL0;\n\t\t\t    nointerpolation float4
-      _WireColor : NORMAL1;\n\t\t\t    nointerpolation float _WireWidth : NORMAL2;\n\t\t\t   
-      nointerpolation float4 _EmissiveColor : NORMAL3;\n\t\t\t    nointerpolation
-      float4 _GlowColor : NORMAL4;\n\t\t\t    \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
+      VFX_OPTIONAL_INTERPOLATION float4 _BaseColor : NORMAL0;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION
+      float4 _WireColor : NORMAL1;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION float _WireWidth
+      : NORMAL2;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION float4 _EmissiveColor : NORMAL3;\n\t\t\t   
+      VFX_OPTIONAL_INTERPOLATION float4 _GlowColor : NORMAL4;\n\t\t\t    \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t\t#define VFX_VARYING_POSCS pos\n\t\t\t#define
       VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t\t#define VFX_VARYING_ALPHATHRESHOLD
       builtInInterpolants.x\n\t\t\t#define VFX_VARYING_FRAMEBLEND builtInInterpolants.y\n\t\t\t#define
@@ -968,7 +969,10 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
+      alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
+      alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -990,8 +994,9 @@ VisualEffectResource:
       = _EmissiveColor__;float4 _GlowColor__ = (float4)0;{\n\t\t\t        \n\t\t\t       
       _GlowColor__ = float4(0.405660391, 0.0866681114, 0.028702382, 0);\n\t\t\t   
       }\n\t\t\t    o._GlowColor = _GlowColor__;\n\n\t\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
       VFX_SHADERGRAPH\n\t\t\t\n\t\t\tvoid VFXGetHDRPLitData(out SurfaceData surfaceData,
       out BuiltinData builtinData, out BSDFData bsdfData, out PreLightData preLightData,
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
@@ -1009,8 +1014,14 @@ VisualEffectResource:
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData)\n\t\t\t{\n\t\t\t\tBSDFData
       bsdfData = (BSDFData)0;\n\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\tpreLightData.diffuseFGD
       = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\tstruct
       SG_Input_aa2c455bb47601743b02cc8084af9ab4\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tstruct
       SG_Output_aa2c455bb47601743b02cc8084af9ab4\n\t\t\t{\n\t\t\t    float3 Normal_8;\n\t\t\t   
@@ -1065,7 +1076,7 @@ VisualEffectResource:
       for scene selection in the editor, this code allow to output the outline correctly\n\t\t\t\t\toutColor
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
-      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"DepthOnly\" }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define
       VFX_PASSDEPTH VFX_PASSDEPTH_ACTUAL\n\t\t\t\n\t\t\t#pragma target 4.5\n\t\t\t#define
       UNITY_MATERIAL_LIT\n\t\t\t#pragma multi_compile _ WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\tstruct
@@ -1085,10 +1096,10 @@ VisualEffectResource:
       tangent : TEXCOORD5;\n\t\t\t\t#endif\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if
       VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious :
       TEXCOORD6;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD7;\n\t\t\t\t#endif\n\t\t\t   
-      nointerpolation float4 _BaseColor : NORMAL0;\n\t\t\t    nointerpolation float4
-      _WireColor : NORMAL1;\n\t\t\t    nointerpolation float _WireWidth : NORMAL2;\n\t\t\t   
-      nointerpolation float4 _EmissiveColor : NORMAL3;\n\t\t\t    nointerpolation
-      float4 _GlowColor : NORMAL4;\n\t\t\t    \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
+      VFX_OPTIONAL_INTERPOLATION float4 _BaseColor : NORMAL0;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION
+      float4 _WireColor : NORMAL1;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION float _WireWidth
+      : NORMAL2;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION float4 _EmissiveColor : NORMAL3;\n\t\t\t   
+      VFX_OPTIONAL_INTERPOLATION float4 _GlowColor : NORMAL4;\n\t\t\t    \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t\t#define VFX_VARYING_POSCS pos\n\t\t\t#define
       VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t\t#define VFX_VARYING_ALPHATHRESHOLD
       builtInInterpolants.x\n\t\t\t#define VFX_VARYING_FRAMEBLEND builtInInterpolants.y\n\t\t\t#define
@@ -1190,7 +1201,10 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
+      alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
+      alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1212,8 +1226,9 @@ VisualEffectResource:
       = _EmissiveColor__;float4 _GlowColor__ = (float4)0;{\n\t\t\t        \n\t\t\t       
       _GlowColor__ = float4(0.405660391, 0.0866681114, 0.028702382, 0);\n\t\t\t   
       }\n\t\t\t    o._GlowColor = _GlowColor__;\n\n\t\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
       VFX_SHADERGRAPH\n\t\t\t\n\t\t\tvoid VFXGetHDRPLitData(out SurfaceData surfaceData,
       out BuiltinData builtinData, out BSDFData bsdfData, out PreLightData preLightData,
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
@@ -1231,8 +1246,14 @@ VisualEffectResource:
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData)\n\t\t\t{\n\t\t\t\tBSDFData
       bsdfData = (BSDFData)0;\n\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\tpreLightData.diffuseFGD
       = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\tstruct
       SG_Input_aa2c455bb47601743b02cc8084af9ab4\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tstruct
       SG_Output_aa2c455bb47601743b02cc8084af9ab4\n\t\t\t{\n\t\t\t    float3 Normal_8;\n\t\t\t   
@@ -1287,9 +1308,9 @@ VisualEffectResource:
       for scene selection in the editor, this code allow to output the outline correctly\n\t\t\t\t\toutColor
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
-      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
       { \"LightMode\"=\"MotionVectors\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t
-      WriteMask 176\n\t\t\t Ref 160\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
+      WriteMask 40\n\t\t\t Ref 32\n\t\t\t Comp Always\n\t\t\t Pass Replace\n\t\t\t}\n\n\t\t\n\t\t\tZWrite
       On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#define VFX_PASSDEPTH
       VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\n\t\t\t#pragma target 4.5\n\t\t\t#define
       UNITY_MATERIAL_LIT\n\t\t\t#pragma multi_compile _ WRITE_NORMAL_BUFFER\n\t\t\t\n\t\t\tstruct
@@ -1309,10 +1330,10 @@ VisualEffectResource:
       tangent : TEXCOORD5;\n\t\t\t\t#endif\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if
       VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t\tfloat4 cPosPrevious :
       TEXCOORD6;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD7;\n\t\t\t\t#endif\n\t\t\t   
-      nointerpolation float4 _BaseColor : NORMAL0;\n\t\t\t    nointerpolation float4
-      _WireColor : NORMAL1;\n\t\t\t    nointerpolation float _WireWidth : NORMAL2;\n\t\t\t   
-      nointerpolation float4 _EmissiveColor : NORMAL3;\n\t\t\t    nointerpolation
-      float4 _GlowColor : NORMAL4;\n\t\t\t    \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
+      VFX_OPTIONAL_INTERPOLATION float4 _BaseColor : NORMAL0;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION
+      float4 _WireColor : NORMAL1;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION float _WireWidth
+      : NORMAL2;\n\t\t\t    VFX_OPTIONAL_INTERPOLATION float4 _EmissiveColor : NORMAL3;\n\t\t\t   
+      VFX_OPTIONAL_INTERPOLATION float4 _GlowColor : NORMAL4;\n\t\t\t    \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t\t#define VFX_VARYING_POSCS pos\n\t\t\t#define
       VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t\t#define VFX_VARYING_ALPHATHRESHOLD
       builtInInterpolants.x\n\t\t\t#define VFX_VARYING_FRAMEBLEND builtInInterpolants.y\n\t\t\t#define
@@ -1414,7 +1435,10 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
+      alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
+      alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1436,8 +1460,9 @@ VisualEffectResource:
       = _EmissiveColor__;float4 _GlowColor__ = (float4)0;{\n\t\t\t        \n\t\t\t       
       _GlowColor__ = float4(0.405660391, 0.0866681114, 0.028702382, 0);\n\t\t\t   
       }\n\t\t\t    o._GlowColor = _GlowColor__;\n\n\t\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#define
-      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t#if
+      VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define
+      SHADERPASS SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLit.hlsl\"\n\t\t\t\n\t\t\t#ifndef
       VFX_SHADERGRAPH\n\t\t\t\n\t\t\tvoid VFXGetHDRPLitData(out SurfaceData surfaceData,
       out BuiltinData builtinData, out BSDFData bsdfData, out PreLightData preLightData,
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData, uint2 tileIndex)\n\t\t\t{\t\n\t\t\t\t#if
@@ -1455,8 +1480,14 @@ VisualEffectResource:
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData)\n\t\t\t{\n\t\t\t\tBSDFData
       bsdfData = (BSDFData)0;\n\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\tpreLightData.diffuseFGD
       = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\tstruct
       SG_Input_aa2c455bb47601743b02cc8084af9ab4\n\t\t\t{\n\t\t\t};\n\t\t\t\n\t\t\tstruct
       SG_Output_aa2c455bb47601743b02cc8084af9ab4\n\t\t\t{\n\t\t\t    float3 Normal_8;\n\t\t\t   
@@ -1511,14 +1542,14 @@ VisualEffectResource:
       for scene selection in the editor, this code allow to output the outline correctly\n\t\t\t\t\toutColor
       = float4(_ObjectId, _PassValue, 1.0, 1.0);\n\t\t\t\t#elif VFX_PASSDEPTH ==
       VFX_PASSDEPTH_ACTUAL\n\t\t\t\t\t//void\n\t\t\t\t#else\n\t\t\t\t\t#error VFX_PASSDEPTH
-      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
-      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t\tStencil\n\t\t\t{\n\t\t\t\tWriteMask
-      7\n\t\t\t\tRef  2\n\t\t\t\tComp Always\n\t\t\t\tPass Replace\n\t\t\t}\t\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
-      target 4.5\n\t\t\t\n\t\t\t#pragma multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma
-      multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define UNITY_MATERIAL_LIT\n\t\t\t\n\t\t\t#define
-      HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP || HDRP_USE_MASK_MAP || USE_NORMAL_MAP
-      || HDRP_USE_EMISSIVE_MAP)\n\t\t\t#define HDRP_USE_EMISSIVE (HDRP_USE_EMISSIVE_MAP
-      || HDRP_USE_EMISSIVE_COLOR || HDRP_USE_ADDITIONAL_EMISSIVE_COLOR)\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\tstruct
+      undefined\n\t\t\t\t#endif\n\t\t\t}\n\t\t\t\n\t\t\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\tPass\n\t\t{\t\t\n\t\t\tTags
+      { \"LightMode\"=\"GBuffer\" }\n\t\t\t\n\t\t    Stencil\n\t\t    {\n\t\t    
+      WriteMask 6\n\t\t     Ref 2\n\t\t     Comp Always\n\t\t     Pass Replace\n\t\t   
+      }\n\n\t\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t\n\t\t\t#pragma
+      multi_compile _ LIGHT_LAYERS\n\t\t\t#pragma multi_compile _ DEBUG_DISPLAY\n\t\t\t\n\t\t\t#define
+      UNITY_MATERIAL_LIT\n\t\t\t\n\t\t\t#define HDRP_NEEDS_UVS (HDRP_USE_BASE_COLOR_MAP
+      || HDRP_USE_MASK_MAP || USE_NORMAL_MAP || HDRP_USE_EMISSIVE_MAP)\n\t\t\t#define
+      HDRP_USE_EMISSIVE (HDRP_USE_EMISSIVE_MAP || HDRP_USE_EMISSIVE_COLOR || HDRP_USE_ADDITIONAL_EMISSIVE_COLOR)\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\tstruct
       ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t#if
       (VFX_NEEDS_COLOR_INTERPOLATOR && HDRP_USE_BASE_COLOR) || HDRP_USE_ADDITIONAL_BASE_COLOR\n\t\t\t\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float4 color : COLOR0;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t#if HDRP_MATERIAL_TYPE_SPECULAR\n\t\t\t\t\t\t\tVFX_OPTIONAL_INTERPOLATION
@@ -1541,10 +1572,11 @@ VisualEffectResource:
       x: motion vector scale u\n\t\t\t\t// y: motion vector scale v\n\t\t\t\tnointerpolation
       float2 builtInInterpolants2 : TEXCOORD5;\n\t\t\t\t#endif\n\t\t        \n\t\t#if
       VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3 posWS : TEXCOORD6;\n\t\t#endif\n\t\t\n\t\t       
-      nointerpolation float4 _BaseColor : NORMAL0;\n\t\t        nointerpolation float4
-      _WireColor : NORMAL1;\n\t\t        nointerpolation float _WireWidth : NORMAL2;\n\t\t       
-      nointerpolation float4 _EmissiveColor : NORMAL3;\n\t\t        nointerpolation
-      float4 _GlowColor : NORMAL4;\n\t\t        \n\n\t\t    \n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\tstruct
+      VFX_OPTIONAL_INTERPOLATION float4 _BaseColor : NORMAL0;\n\t\t        VFX_OPTIONAL_INTERPOLATION
+      float4 _WireColor : NORMAL1;\n\t\t        VFX_OPTIONAL_INTERPOLATION float
+      _WireWidth : NORMAL2;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4 _EmissiveColor
+      : NORMAL3;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4 _GlowColor : NORMAL4;\n\t\t       
+      \n\n\t\t    \n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\tstruct
       ps_output\n\t\t\t{\n\t\t\t\tfloat4 color : SV_Target0;\n\t\t\t};\n\t\t\n\t\t\n\t\t\t\t\t#if
       (VFX_NEEDS_COLOR_INTERPOLATOR && HDRP_USE_BASE_COLOR) || HDRP_USE_ADDITIONAL_BASE_COLOR\n\t\t\t\t\t#define
       VFX_VARYING_COLOR color.rgb\n\t\t\t\t\t#define VFX_VARYING_ALPHA color.a\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#define
@@ -1654,7 +1686,10 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
+      alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
+      alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1712,19 +1747,25 @@ VisualEffectResource:
       VFX_VARYING_PS_INPUTS i, float3 normalWS, const VFXUVData uvData)\n\t\t\t{\n\t\t\t\tBSDFData
       bsdfData = (BSDFData)0;\n\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\tpreLightData.diffuseFGD
       = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\n\t\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\n\t\t\t\t\n\t\t\t\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t\t\t\t#ifndef
+      SHADERPASS\n\t\t\t\t\t#error Shaderpass should be defined at this stage.\n\t\t\t\t\t#endif\n\t\t\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t\t//
       Node: Distance\n\t\t\tvoid Unity_Distance_float2(float2 A, float2 B, out float
       Out)\n\t\t\t{\n\t\t\t    Out = distance(A, B);\n\t\t\t}\n\t\t\t\n\t\t\t// Node:
       Remap\n\t\t\tvoid Unity_Remap_float(float In, float2 InMinMax, float2 OutMinMax,
       out float Out)\n\t\t\t{\n\t\t\t    Out = OutMinMax.x + (In - InMinMax.x) *
       (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);\n\t\t\t}\n\t\t\t\n\t\t\t//
-      Node: Multiply\n\t\t\tvoid Unity_Multiply_float (float4 A, float4 B, out float4
+      Node: Multiply\n\t\t\tvoid Unity_Multiply_float(float4 A, float4 B, out float4
       Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: DDXY\n\t\t\tvoid
       Unity_DDXY_float2(float2 In, out float2 Out)\n\t\t\t{\n\t\t\t    Out = abs(ddx(In))
-      + abs(ddy(In));\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Multiply\n\t\t\tvoid Unity_Multiply_float
-      (float2 A, float2 B, out float2 Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t//
+      + abs(ddy(In));\n\t\t\t}\n\t\t\t\n\t\t\t// Node: Multiply\n\t\t\tvoid Unity_Multiply_float(float2
+      A, float2 B, out float2 Out)\n\t\t\t{\n\t\t\t    Out = A * B;\n\t\t\t}\n\t\t\t\n\t\t\t//
       Node: Divide\n\t\t\tvoid Unity_Divide_float2(float2 A, float2 B, out float2
       Out)\n\t\t\t{\n\t\t\t    Out = A / B;\n\t\t\t}\n\t\t\t\n\t\t\t// Node: One
       Minus\n\t\t\tvoid Unity_OneMinus_float2(float2 In, out float2 Out)\n\t\t\t{\n\t\t\t   
@@ -1865,18 +1906,20 @@ VisualEffectResource:
       float4 vertexColor : COLOR1;\n\t\t        #endif\n\t\t\t\tfloat3 normal : TEXCOORD2;\n\t\t\t\t#if
       USE_NORMAL_MAP || SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t\t\tfloat4 tangent
       : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\t#if USE_SOFT_PARTICLE || USE_ALPHA_TEST
-      || USE_FLIPBOOK_INTERPOLATION\n\t\t\t\t// x: inverse soft particles fade distance\n\t\t\t\t//
-      y: alpha threshold\n\t\t\t\t// z: frame blending factor\n\t\t\t\tnointerpolation
-      float3 builtInInterpolants : TEXCOORD4;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if
-      USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t// x: motion vector scale u\n\t\t\t\t//
-      y: motion vector scale v\n\t\t\t\tnointerpolation float2 builtInInterpolants2
-      : TEXCOORD5;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4
-      cPosPrevious : TEXCOORD6;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD7;\n\t\t\t\t#endif\n\t\t\n\t\t\t\tfloat3
-      posWS : TEXCOORD8; // Needed for fog\n\t\t        \n\t\t        nointerpolation
-      float4 _BaseColor : NORMAL0;\n\t\t        nointerpolation float4 _WireColor
-      : NORMAL1;\n\t\t        nointerpolation float _WireWidth : NORMAL2;\n\t\t       
-      nointerpolation float4 _EmissiveColor : NORMAL3;\n\t\t        nointerpolation
-      float4 _GlowColor : NORMAL4;\n\t\t        \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\tstruct
+      || USE_FLIPBOOK_INTERPOLATION || WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t//
+      x: inverse soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t//
+      z: frame blending factor\n\t\t\t\tnointerpolation float3 builtInInterpolants
+      : TEXCOORD4;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t//
+      x: motion vector scale u\n\t\t\t\t// y: motion vector scale v\n\t\t\t\tnointerpolation
+      float2 builtInInterpolants2 : TEXCOORD5;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if
+      WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4 cPosPrevious : TEXCOORD6;\n\t\t\t\tfloat4
+      cPosNonJiterred : TEXCOORD7;\n\t\t\t\t#endif\n\t\t\n\t\t\t\tfloat3 posWS :
+      TEXCOORD8; // Needed for fog\n\t\t        \n\t\t        VFX_OPTIONAL_INTERPOLATION
+      float4 _BaseColor : NORMAL0;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4
+      _WireColor : NORMAL1;\n\t\t        VFX_OPTIONAL_INTERPOLATION float _WireWidth
+      : NORMAL2;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4 _EmissiveColor :
+      NORMAL3;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4 _GlowColor : NORMAL4;\n\t\t       
+      \n\n\t\t\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\tstruct
       ps_output\n\t\t\t{\n\t\t\t\tfloat4 color : SV_Target0;\n\t\t\t};\n\t\t\n\t\t\n\t\t\t\t\t#if
       (VFX_NEEDS_COLOR_INTERPOLATOR && HDRP_USE_BASE_COLOR) || HDRP_USE_ADDITIONAL_BASE_COLOR\n\t\t\t\t\t#define
       VFX_VARYING_COLOR color.rgb\n\t\t\t\t\t#define VFX_VARYING_ALPHA color.a\n\t\t\t\t\t#endif\n\t\t\t\t\t\n\t\t\t\t\t#define
@@ -1988,7 +2031,10 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
+      alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
+      alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -2047,18 +2093,24 @@ VisualEffectResource:
       bsdfData = (BSDFData)0;\n\t\t\t\tPreLightData preLightData = (PreLightData)0;\n\t\t\t\tpreLightData.diffuseFGD
       = 1.0f;\n\t\t\t\tVFXGetHDRPLitData(surfaceData,builtinData,bsdfData,preLightData,i,normalWS,uvData,uint2(0,0));\n\t\t\t}\n\t\t\t\n\t\t\t#endif\n\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXLitPixelOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t   
-      #include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t   
-      #include \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t   
+      \n\t\t    \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t   
+      \t\t#ifndef SHADERPASS\n\t\t    \t\t#error Shaderpass should be defined at
+      this stage.\n\t\t    \t\t#endif\n\t\t    \t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t   
+      \t\t\n\t\t    \n\t\t    #include \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t   
       // Node: Distance\n\t\t    void Unity_Distance_float2(float2 A, float2 B, out
       float Out)\n\t\t    {\n\t\t        Out = distance(A, B);\n\t\t    }\n\t\t   
       \n\t\t    // Node: Remap\n\t\t    void Unity_Remap_float(float In, float2 InMinMax,
       float2 OutMinMax, out float Out)\n\t\t    {\n\t\t        Out = OutMinMax.x
       + (In - InMinMax.x) * (OutMinMax.y - OutMinMax.x) / (InMinMax.y - InMinMax.x);\n\t\t   
-      }\n\t\t    \n\t\t    // Node: Multiply\n\t\t    void Unity_Multiply_float (float4
+      }\n\t\t    \n\t\t    // Node: Multiply\n\t\t    void Unity_Multiply_float(float4
       A, float4 B, out float4 Out)\n\t\t    {\n\t\t        Out = A * B;\n\t\t   
       }\n\t\t    \n\t\t    // Node: DDXY\n\t\t    void Unity_DDXY_float2(float2 In,
       out float2 Out)\n\t\t    {\n\t\t        Out = abs(ddx(In)) + abs(ddy(In));\n\t\t   
-      }\n\t\t    \n\t\t    // Node: Multiply\n\t\t    void Unity_Multiply_float (float2
+      }\n\t\t    \n\t\t    // Node: Multiply\n\t\t    void Unity_Multiply_float(float2
       A, float2 B, out float2 Out)\n\t\t    {\n\t\t        Out = A * B;\n\t\t   
       }\n\t\t    \n\t\t    // Node: Divide\n\t\t    void Unity_Divide_float2(float2
       A, float2 B, out float2 Out)\n\t\t    {\n\t\t        Out = A / B;\n\t\t   
@@ -2182,35 +2234,38 @@ VisualEffectResource:
       = OUTSG.Emissive_5;\n\t\t            #endif\n\t\t\n\t\t            \n\t\t           
       outColor = VFXGetPixelOutputForwardShaderGraph(surface, builtin,i);\n\t\t       
       #else\n\t\t            outColor = VFXGetPixelOutputForward(i,normalWS,uvData);\n\t\t       
-      #endif\n\t\t\t\t\n\t\t\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tfloat2
+      #endif\n\t\t\t\t\n\t\t\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\t\n\t\t\t\t\t\t\tfloat2
       velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w) -
-      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t\t#if
-      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\tfloat4
-      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity
-      * 0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\toutMotionVector
-      = encodedMotionVector;\n\t\t\t\t#endif\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
+      (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t\t#if
+      UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\tfloat4
+      encodedMotionVector = 0.0f;\n\t\t\t\t\t\t\tVFXEncodeMotionVector(velocity *
+      0.5f, encodedMotionVector);\n\t\t\t\t\t\t\t\n\t\t\t\t\toutMotionVector = encodedMotionVector;\n\t\t\t\t\toutMotionVector.a
+      = outColor.a < i.VFX_VARYING_ALPHATHRESHOLD ? 0.0f : 1.0f; //Independant clipping
+      for motion vector pass\n\t\t\t\t#endif\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t//
       Shadow pass\n\t\tPass\n\t\t{\t\t\n\t\t\tTags { \"LightMode\"=\"ShadowCaster\"
       }\n\t\t\n\t\t\tZWrite On\n\t\t\tBlend Off\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma
-      target 4.5\n\t\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos : SV_POSITION;\n\t\t\t\tfloat2
-      uv : TEXCOORD0;\t\n\t\t\t\t#if USE_ALPHA_TEST || USE_FLIPBOOK_INTERPOLATION
-      || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha threshold\n\t\t\t\t// y: frame
-      blending factor\n\t\t\t\t// z: alpha\n\t\t\t\tnointerpolation float3 builtInInterpolants
-      : TEXCOORD1;\n\t\t\t\t#endif\n\t\t        #if VFX_SHADERGRAPH_HAS_UV1\n\t\t       
+      target 4.5\n\t\t\t#if !USE_ALPHA_TEST && IS_TRANSPARENT_PARTICLE\n\t\t\t#define
+      USE_ALPHA_TEST 1\n\t\t\t#endif\n\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4
+      pos : SV_POSITION;\n\t\t\t\tfloat2 uv : TEXCOORD0;\t\n\t\t\t\t#if USE_ALPHA_TEST
+      || USE_FLIPBOOK_INTERPOLATION || VFX_USE_ALPHA_CURRENT\n\t\t\t\t// x: alpha
+      threshold\n\t\t\t\t// y: frame blending factor\n\t\t\t\t// z: alpha\n\t\t\t\tnointerpolation
+      float3 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t        #if VFX_SHADERGRAPH_HAS_UV1\n\t\t       
       float4 uv1 : COLOR2;\n\t\t        #endif\n\t\t        #if VFX_SHADERGRAPH_HAS_UV2\n\t\t       
       float4 uv2 : COLOR3;\n\t\t        #endif\n\t\t        #if VFX_SHADERGRAPH_HAS_UV3\n\t\t       
       float4 uv3 : COLOR4;\n\t\t        #endif\n\t\t        #if VFX_SHADERGRAPH_HAS_COLOR\n\t\t       
       float4 vertexColor : COLOR1;\n\t\t        #endif\n\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t//
       x: motion vector scale u\n\t\t\t\t// y: motion vector scale v\n\t\t\t\tnointerpolation
       float2 builtInInterpolants2 : TEXCOORD2;\n\t\t\t\t#endif\n\t\t        \n\t\t       
-      nointerpolation float4 _BaseColor : NORMAL0;\n\t\t        nointerpolation float4
-      _WireColor : NORMAL1;\n\t\t        nointerpolation float _WireWidth : NORMAL2;\n\t\t       
-      nointerpolation float4 _EmissiveColor : NORMAL3;\n\t\t        nointerpolation
-      float4 _GlowColor : NORMAL4;\n\t\t        \n\n\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\n\t\t#define
-      VFX_VARYING_PS_INPUTS ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define
-      VFX_VARYING_ALPHA builtInInterpolants.z\n\t\t#define VFX_VARYING_ALPHATHRESHOLD
-      builtInInterpolants.x\n\t\t#define VFX_VARYING_FRAMEBLEND builtInInterpolants.y\n\t\t#define
-      VFX_VARYING_MOTIONVECTORSCALE builtInInterpolants2.xy\n\t\t#define VFX_VARYING_UV
-      uv\n\t\t\t\t\n\t\t\n\t\t\n\t\t// Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t\t\t\n\t\t\t#if
+      VFX_OPTIONAL_INTERPOLATION float4 _BaseColor : NORMAL0;\n\t\t        VFX_OPTIONAL_INTERPOLATION
+      float4 _WireColor : NORMAL1;\n\t\t        VFX_OPTIONAL_INTERPOLATION float
+      _WireWidth : NORMAL2;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4 _EmissiveColor
+      : NORMAL3;\n\t\t        VFX_OPTIONAL_INTERPOLATION float4 _GlowColor : NORMAL4;\n\t\t       
+      \n\n\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\n\t\t#define VFX_VARYING_PS_INPUTS
+      ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define VFX_VARYING_ALPHA
+      builtInInterpolants.z\n\t\t#define VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.x\n\t\t#define
+      VFX_VARYING_FRAMEBLEND builtInInterpolants.y\n\t\t#define VFX_VARYING_MOTIONVECTORSCALE
+      builtInInterpolants2.xy\n\t\t#define VFX_VARYING_UV uv\n\t\t\t\t\n\t\t\n\t\t\n\t\t//
+      Needed for HDRP\n\t\t#define SHADERPASS SHADERPASS_SHADOWS\n\t\t\t\t\n\t\t\t#if
       !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
       VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
@@ -2302,7 +2357,10 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
+      alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
+      alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -2325,8 +2383,14 @@ VisualEffectResource:
       _GlowColor__ = float4(0.405660391, 0.0866681114, 0.028702382, 0);\n\t\t\t   
       }\n\t\t\t    o._GlowColor = _GlowColor__;\n\n\t\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t   
-      #include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t   
-      #include \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t   
+      \n\t\t    \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Packing.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/Color.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl\"\n\t\t   
+      \t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/Material/BuiltinGIUtilities.hlsl\"\n\t\t   
+      \t\t#ifndef SHADERPASS\n\t\t    \t\t#error Shaderpass should be defined at
+      this stage.\n\t\t    \t\t#endif\n\t\t    \t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/ShaderLibrary/ShaderGraphFunctions.hlsl\"\n\t\t   
+      \t\t\n\t\t    \n\t\t    #include \"Packages/com.unity.shadergraph/ShaderGraphLibrary/Functions.hlsl\"\n\t\t   
       struct SG_Input_aa2c455bb47601743b02cc8084af9ab4\n\t\t    {\n\t\t    };\n\t\t   
       \n\t\t    struct SG_Output_aa2c455bb47601743b02cc8084af9ab4\n\t\t    {\n\t\t       
       float3 Normal_8;\n\t\t        float Alpha_4;\n\t\t    };\n\t\t    \n\t\t   
@@ -2953,7 +3017,7 @@ VisualEffectResource:
         index: 1
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 2
       params:
       - nameId: bounds_center
@@ -3062,7 +3126,14 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: "Indicates how long the particle can stay alive. If the particle\u2019s
+        age exceeds its lifetime, the particle is destroyed."
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661614552
@@ -3096,7 +3167,14 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: "Indicates how long the particle can stay alive. If the particle\u2019s
+        age exceeds its lifetime, the particle is destroyed."
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661614573
@@ -3157,7 +3235,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: UnityEditor.VFX.Position, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The current position of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661614637}
@@ -3383,7 +3467,14 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.UInt32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: Outputs the ID of the particle. Each particle gets assigned an incremental
+        unique ID value when it is created.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 1
   m_LinkedSlots:
   - {fileID: 8926484042661614624}
@@ -3942,6 +4033,7 @@ MonoBehaviour:
   m_InputSlots:
   - {fileID: 8926484042661614642}
   - {fileID: 8926484042661614643}
+  - {fileID: 8926484042661614747}
   - {fileID: 8926484042661614649}
   - {fileID: 8926484042661614654}
   - {fileID: 8926484042661614659}
@@ -3986,6 +4078,7 @@ MonoBehaviour:
   colorMode: 1
   useEmissive: 0
   doubleSided: 0
+  preserveSpecularLighting: 0
   enableShadows: 1
   enableSpecular: 1
   enableCookie: 1
@@ -4902,7 +4995,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The uniform size of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661614682
@@ -4936,7 +5035,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The uniform size of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661614683
@@ -5603,6 +5708,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
@@ -7026,5 +7137,51 @@ MonoBehaviour:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes: []
+  m_Direction: 0
+  m_LinkedSlots: []
+--- !u!114 &8926484042661614747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f780aa281814f9842a7c076d436932e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Parent: {fileID: 0}
+  m_Children: []
+  m_UIPosition: {x: 0, y: 0}
+  m_UICollapsed: 1
+  m_UISuperCollapsed: 0
+  m_MasterSlot: {fileID: 8926484042661614747}
+  m_MasterData:
+    m_Owner: {fileID: 8926484042661614641}
+    m_Value:
+      m_Type:
+        m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+          PublicKeyToken=b77a5c561934e089
+      m_SerializableObject: 0.5
+    m_Space: 2147483647
+  m_Property:
+    name: alphaThreshold
+    m_serializedType:
+      m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
+        PublicKeyToken=b77a5c561934e089
+    attributes:
+    - m_Type: 0
+      m_Min: 0
+      m_Max: 1
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: Alpha threshold used for pixel clipping
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []

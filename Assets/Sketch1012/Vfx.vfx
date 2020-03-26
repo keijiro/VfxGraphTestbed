@@ -352,13 +352,14 @@ VisualEffectResource:
       attributes.size = (float)0.100000001;\n        attributes.position = float3(0,
       0, 0);\n        \n\r\n#if VFX_USE_PARTICLEID_CURRENT\r\n         attributes.particleId
       = particleIndex;\r\n#endif\r\n#if VFX_USE_SEED_CURRENT\r\n        attributes.seed
-      = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if HAS_STRIPS\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n        uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex
-      = min(stripIndex, STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex,
-      stripIndex))\r\n            return;\r\n\r\n        const StripData stripData
-      = GetStripDataFromStripIndex(stripIndex, PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex,
-      attributes, stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic
-      on random with strip\r\n#endif\r\n        \r\n        \r\n\t\t\r\n#if VFX_USE_ALIVE_CURRENT\r\n       
+      = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if VFX_USE_SPAWNINDEX_CURRENT\r\n       
+      attributes.spawnIndex = id;\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
+      uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex = min(stripIndex,
+      STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex, stripIndex))\r\n           
+      return;\r\n\r\n        const StripData stripData = GetStripDataFromStripIndex(stripIndex,
+      PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex, attributes,
+      stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic on random
+      with strip\r\n#endif\r\n        \r\n        \r\n\t\t\r\n#if VFX_USE_ALIVE_CURRENT\r\n       
       if (attributes.alive)\r\n#endif       \r\n        {\r\n#if USE_DEAD_LIST\r\n\t       
       uint deadIndex = deadListIn.DecrementCounter();\r\n            uint index =
       deadListIn[deadIndex];\r\n#else\r\n            uint index = particleIndex;\r\n#endif\r\n           
@@ -382,15 +383,15 @@ VisualEffectResource:
       1\n\t\t#define VFX_USE_PIVOTZ_CURRENT 1\n\t\t#define VFX_USE_SCALEX_CURRENT
       1\n\t\t#define VFX_USE_SCALEY_CURRENT 1\n\t\t#define VFX_USE_SCALEZ_CURRENT
       1\n\t\t#define VFX_COLORMAPPING_DEFAULT 1\n\t\t#define IS_OPAQUE_PARTICLE 1\n\t\t#define
-      VFX_BYPASS_EXPOSURE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define VFX_LOCAL_SPACE
-      1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\t\n\t\tstruct
+      VFX_BYPASS_EXPOSURE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float size;\n\t\t    float3 position;\n\t\t    float3
       color;\n\t\t    float alpha;\n\t\t    bool alive;\n\t\t    float3 axisX;\n\t\t   
       float3 axisY;\n\t\t    float3 axisZ;\n\t\t    float angleX;\n\t\t    float
       angleY;\n\t\t    float angleZ;\n\t\t    float pivotX;\n\t\t    float pivotY;\n\t\t   
       float pivotZ;\n\t\t    float scaleX;\n\t\t    float scaleY;\n\t\t    float
       scaleZ;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
-      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\n\t\t\n\t\t#define
+      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
       HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
       VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
@@ -429,7 +430,9 @@ VisualEffectResource:
       uv\n\t\t\t\n\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t#define VFX_VARYING_POSWS
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if IS_MOTION_VECTORS_PASS\n\t\t\t#define
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
+      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -512,7 +515,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -564,7 +568,9 @@ VisualEffectResource:
       uv\n\t\t\t\n\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t#define VFX_VARYING_POSWS
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if IS_MOTION_VECTORS_PASS\n\t\t\t#define
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
+      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -647,7 +653,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -678,19 +685,19 @@ VisualEffectResource:
       }\n\t\t\t\n\t\t\tHLSLPROGRAM\n\t\t\t#pragma target 4.5\n\t\t\t#pragma multi_compile
       _ DEBUG_DISPLAY\n\t\t\t\n\t\t\tstruct ps_input\n\t\t\t{\n\t\t\t\tfloat4 pos
       : SV_POSITION;\n\t\t\t\t#if USE_FLIPBOOK_INTERPOLATION\n\t\t\t\tfloat4 uv :
-      TEXCOORD0;\n\t\t\t\t#else\n\t\t\t\tfloat2 uv : TEXCOORD0;\t\n\t\t\t\t#endif\n\t\t       
-      #if VFX_SHADERGRAPH_HAS_UV1\n\t\t        float4 uv1 : TEXCOORD1;\n\t\t       
-      #endif\n\t\t        #if VFX_SHADERGRAPH_HAS_UV2\n\t\t        float4 uv2 : TEXCOORD2;\n\t\t       
-      #endif\n\t\t        #if VFX_SHADERGRAPH_HAS_UV3\n\t\t        float4 uv3 : TEXCOORD3;\n\t\t       
-      #endif\n\t\t        #if VFX_SHADERGRAPH_HAS_COLOR\n\t\t        float4 vertexColor
-      : COLOR1;\n\t\t        #endif\n\t\t\t\t#if VFX_NEEDS_COLOR_INTERPOLATOR\n\t\t\t\tnointerpolation
-      float4 color : COLOR0;\n\t\t\t\t#endif\n\t\t\t\t#if USE_SOFT_PARTICLE || USE_ALPHA_TEST
-      || USE_FLIPBOOK_INTERPOLATION || USE_EXPOSURE_WEIGHT\n\t\t\t\t// x: inverse
-      soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t// z:
-      frame blending factor\n\t\t\t\t// w: exposure weight\n\t\t\t\tnointerpolation
-      float4 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t//
-      x: motion vectors scale X\n\t\t\t\t// y: motion vectors scale Y\n\t\t\t\tnointerpolation
-      float2 builtInInterpolants2 : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
+      TEXCOORD0;\n\t\t\t\t#else\n\t\t\t\tfloat2 uv : TEXCOORD0;\t\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_SHADERGRAPH_HAS_UV1\n\t\t\t\tfloat4 uv1 : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_SHADERGRAPH_HAS_UV2\n\t\t\t\tfloat4 uv2 : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_SHADERGRAPH_HAS_UV3\n\t\t\t\tfloat4 uv3 : TEXCOORD3;\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_SHADERGRAPH_HAS_COLOR\n\t\t\t\tfloat4 vertexColor : COLOR1;\n\t\t\t\t#endif\n\t\t\t\t#if
+      VFX_NEEDS_COLOR_INTERPOLATOR\n\t\t\t\tnointerpolation float4 color : COLOR0;\n\t\t\t\t#endif\n\t\t\t\t#if
+      USE_SOFT_PARTICLE || USE_ALPHA_TEST || USE_FLIPBOOK_INTERPOLATION || USE_EXPOSURE_WEIGHT
+      || WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t// x: inverse soft particles fade
+      distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t// z: frame blending factor\n\t\t\t\t//
+      w: exposure weight\n\t\t\t\tnointerpolation float4 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if
+      USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t// x: motion vectors scale X\n\t\t\t\t//
+      y: motion vectors scale Y\n\t\t\t\tnointerpolation float2 builtInInterpolants2
+      : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
       posWS : TEXCOORD4;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\tfloat4
       cPosPrevious : TEXCOORD5;\n\t\t\t\tfloat4 cPosNonJiterred : TEXCOORD6;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t#if
       SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t\t\tfloat3 normal : TEXCOORD7;\n\t\t\t\t#endif\n\t\t\t\t#if
@@ -706,11 +713,12 @@ VisualEffectResource:
       VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t#if USE_EXPOSURE_WEIGHT\n\t\t#define
       VFX_VARYING_EXPOSUREWEIGHT builtInInterpolants.w\n\t\t#endif\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t#endif\n\t\t\n\t\t#if SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t#define
-      VFX_VARYING_NORMAL normal\n\t\t#endif\n\t\t#if SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t#define
-      VFX_VARYING_TANGENT tangent\n\t\t#endif\n\t\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
-      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
-      and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      cPosPrevious\n\t\t#endif\n\t\t\n\t\t#define SHADERPASS SHADERPASS_FORWARD_UNLIT\n\t\t\n\t\t#if
+      SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t#define VFX_VARYING_NORMAL normal\n\t\t#endif\n\t\t#if
+      SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t#define VFX_VARYING_TANGENT tangent\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
+      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
+      VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_FDD06EC7(inout float3 color, float3 Color) /*attribute:color Composition:Overwrite
       Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    color = Color;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\tstruct
@@ -791,7 +799,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -803,8 +812,8 @@ VisualEffectResource:
       = uvData.blend;\n\t\t\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS && defined(VFX_VARYING_MOTIONVECTORSCALE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_MOTIONVECTORSCALE
       = motionVectorScale * invFlipBookSize;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t   
       \n\t\t\t    \n\t\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t   
-      \n\t\t    \n\t\t\t#pragma fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tps_output
+      \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\n\t\t\t#pragma
+      fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tps_output
       o = (ps_output)0;\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\n\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_NORMAL\n\t\t\t\t\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t\t\t\tconst
       float faceMul = frontFace ? 1.0f : -1.0f;\n\t\t\t\t\t\t\t#else\n\t\t\t\t\t\t\tconst
@@ -832,20 +841,21 @@ VisualEffectResource:
       \t\t\to.color = SampleGradient(gradient, VFX_TEXTURE_COLOR.a * color.a) * float4(color.rgb,1.0);\n\t\t           
       \t\t#endif\n\t\t            \t\t\n\t\t            \t\t\n\t\t        #endif\n\t\t\n\t\t\t\to.color
       = VFXApplyPreExposure(o.color, i);\n\t\t\t\to.color = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
-      = saturate(o.color.a);\n\t\t        o.color = VFXTransformFinalColor(o.color);\n\t\t\t\t\n\t\t#if
+      = saturate(o.color.a);\n\t\t\t\to.color = VFXTransformFinalColor(o.color);\n\t\t\t\t\n\t\t#if
       WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\n\t\t\t\t\t\tfloat2 velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w)
       - (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t#if
       UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\tfloat4
       encodedMotionVector = 0.0f;\n\t\t\t\t\t\tVFXEncodeMotionVector(velocity * 0.5f,
-      encodedMotionVector);\n\t\t\t\t\t\t\n\t\t\t\to.outMotionVector = encodedMotionVector;\n\t\t#endif\n\t\t\t\treturn
-      o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
+      encodedMotionVector);\n\t\t\t\t\t\t\n\t\t\t\to.outMotionVector = encodedMotionVector;\n\t\t\t\to.outMotionVector.a
+      = o.color.a < i.VFX_VARYING_ALPHATHRESHOLD ? 0.0f : 1.0f; //Independant clipping
+      for motion vector pass\n\t\t#endif\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
   - compute: 1
     name: '[System 1]Update Particle'
     source: "#pragma kernel CSMain\r\n#define NB_THREADS_PER_GROUP 64\n#define HAS_ATTRIBUTES
       1\n#define VFX_PASSDEPTH_ACTUAL (0)\n#define VFX_PASSDEPTH_MOTION_VECTOR (1)\n#define
       VFX_PASSDEPTH_SELECTION (2)\n#define VFX_USE_SIZE_CURRENT 1\n#define VFX_USE_POSITION_CURRENT
       1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float3 Position_b;\n    float uniform_b;\nCBUFFER_END\n\nstruct Attributes\n{\n   
+      float3 Position_b;\n    float uniform_a;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float size;\n    float3 position;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
       USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer
       attributeBuffer;\r\n\r\n#if USE_DEAD_LIST\r\nRWStructuredBuffer<uint> deadListOut;\r\n#endif\r\n\r\n#if
@@ -870,7 +880,7 @@ VisualEffectResource:
       VFX_USE_OLDPOSITION_CURRENT\r\n\t\t\tattributes.oldPosition = attributes.position;\r\n#endif\r\n#if
       HAS_STRIPS\r\n            const StripData stripData = GetStripDataFromParticleIndex(index,
       PARTICLE_PER_STRIP_COUNT);\r\n            InitStripAttributes(index, attributes,
-      stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    float2 tmp_w = GeneratePerlinNoise(uniform_b,
+      stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    float2 tmp_w = GeneratePerlinNoise(uniform_a,
       float3(8.23999977, 0.5, 2).x, (int)1, float3(8.23999977, 0.5, 2).y, float3(8.23999977,
       0.5, 2).z);\n\t\t\t    float tmp_x = tmp_w[0];\n\t\t\t    float tmp_z = tmp_x
       - (float)-1;\n\t\t\t    float tmp_bb = tmp_z / (float)2;\n\t\t\t    float tmp_bd
@@ -896,7 +906,7 @@ VisualEffectResource:
       VFX_USE_OLDPOSITION_CURRENT\r\n\t\tattributes.oldPosition = attributes.position;\r\n#endif\r\n#if
       HAS_STRIPS\r\n        const StripData stripData = GetStripDataFromParticleIndex(index,
       PARTICLE_PER_STRIP_COUNT);\r\n        InitStripAttributes(index, attributes,
-      stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t    float2 tmp_w = GeneratePerlinNoise(uniform_b,
+      stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t    float2 tmp_w = GeneratePerlinNoise(uniform_a,
       float3(8.23999977, 0.5, 2).x, (int)1, float3(8.23999977, 0.5, 2).y, float3(8.23999977,
       0.5, 2).z);\n\t\t    float tmp_x = tmp_w[0];\n\t\t    float tmp_z = tmp_x -
       (float)-1;\n\t\t    float tmp_bb = tmp_z / (float)2;\n\t\t    float tmp_bd
@@ -914,7 +924,7 @@ VisualEffectResource:
       VFX_PASSDEPTH_SELECTION (2)\n#define VFX_USE_COLOR_CURRENT 1\n#define VFX_USE_BASEPOSITION_CURRENT
       1\n#define VFX_USE_PARTICLEID_CURRENT 1\n#define VFX_USE_POSITION_CURRENT 1\n#define
       VFX_USE_RATECOUNT_B_CURRENT 1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float uniform_b;\n    float uniform_c;\n    uint2 PADDING_0;\nCBUFFER_END\n\nstruct
+      float uniform_a;\n    float uniform_b;\n    uint2 PADDING_0;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 color;\n    float3 BasePosition;\n    uint particleId;\n   
       float3 position;\n    float rateCount_b;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
       USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer
@@ -964,7 +974,8 @@ VisualEffectResource:
       = float3(0, 0, 0);\n        attributes.rateCount_b = (float)0;\n        \n\r\n#if
       VFX_USE_PARTICLEID_CURRENT\r\n         attributes.particleId = particleIndex;\r\n#endif\r\n#if
       VFX_USE_SEED_CURRENT\r\n        attributes.seed = WangHash(particleIndex ^
-      systemSeed);\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
+      systemSeed);\r\n#endif\r\n#if VFX_USE_SPAWNINDEX_CURRENT\r\n        attributes.spawnIndex
+      = id;\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
       uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex = min(stripIndex,
       STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex, stripIndex))\r\n           
       return;\r\n\r\n        const StripData stripData = GetStripDataFromStripIndex(stripIndex,
@@ -972,11 +983,11 @@ VisualEffectResource:
       stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic on random
       with strip\r\n#endif\r\n        \r\n        {\n            SetAttribute_FDD06EC7(
       /*inout */attributes.color, float3(0, 0, 0));\n        }\n        {\n           
-      uint tmp_k = attributes.particleId ^ asuint(uniform_b);\n            float
+      uint tmp_k = attributes.particleId ^ asuint(uniform_a);\n            float
       tmp_l = FixedRand(tmp_k);\n            float tmp_n = tmp_l * (float)6.28318548;\n           
       float tmp_o = cos(tmp_n);\n            float tmp_p = sin(tmp_n);\n           
       float2 tmp_q = float2(tmp_o, tmp_p);\n            uint tmp_t = attributes.particleId
-      ^ asuint(uniform_c);\n            float tmp_u = FixedRand(tmp_t);\n           
+      ^ asuint(uniform_b);\n            float tmp_u = FixedRand(tmp_t);\n           
       float tmp_w = tmp_u * (float)2;\n            float tmp_x = (float)-1 + tmp_w;\n           
       float tmp_y = tmp_x * tmp_x;\n            float tmp_z = (float)1 - tmp_y;\n           
       float tmp_bb = pow(tmp_z, (float)0.5);\n            float2 tmp_bc = float2(tmp_bb,
@@ -1000,7 +1011,7 @@ VisualEffectResource:
       VFX_PASSDEPTH_SELECTION (2)\n#define VFX_USE_BASEPOSITION_CURRENT 1\n#define
       VFX_USE_POSITION_CURRENT 1\n#define VFX_USE_RATECOUNT_B_CURRENT 1\n#define
       VFX_USE_EVENTCOUNT_CURRENT 1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4x4 uniform_b;\n    float deltaTime_b;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct
+      float4x4 uniform_a;\n    float deltaTime_b;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct
       Attributes\n{\n    float3 BasePosition;\n    float3 position;\n    float rateCount_b;\n   
       uint eventCount;\n};\n\nstruct SourceAttributes\n{\n};\n\nAppendStructuredBuffer<uint>
       eventListOut_a;\n\n\r\n\r\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT &&
@@ -1031,7 +1042,7 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n            const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n           
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t   
-      float3 tmp_k = mul(uniform_b, float4(attributes.BasePosition, 1.0)).xyz;\n\t\t\t   
+      float3 tmp_k = mul(uniform_a, float4(attributes.BasePosition, 1.0)).xyz;\n\t\t\t   
       SetAttribute_CAC29747( /*inout */attributes.position, tmp_k);\n\t\t\t}\n\t\t\t{\n\t\t\t   
       attributes.eventCount = 0u;\n\t\t\t    GPUEventRate_1( /*inout */attributes.rateCount_b, 
       /*inout */attributes.eventCount, (float)60, deltaTime_b);\n\t\t\t    eventCount_a
@@ -1059,7 +1070,7 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n        const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
-      float3 tmp_k = mul(uniform_b, float4(attributes.BasePosition, 1.0)).xyz;\n\t\t   
+      float3 tmp_k = mul(uniform_a, float4(attributes.BasePosition, 1.0)).xyz;\n\t\t   
       SetAttribute_CAC29747( /*inout */attributes.position, tmp_k);\n\t\t}\n\t\t{\n\t\t   
       attributes.eventCount = 0u;\n\t\t    GPUEventRate_1( /*inout */attributes.rateCount_b, 
       /*inout */attributes.eventCount, (float)60, deltaTime_b);\n\t\t    eventCount_a
@@ -1080,7 +1091,7 @@ VisualEffectResource:
       (2)\n\t\t#define VFX_USE_COLOR_CURRENT 1\n\t\t#define VFX_USE_POSITION_CURRENT
       1\n\t\t#define VFX_USE_ALPHA_CURRENT 1\n\t\t#define VFX_USE_ALIVE_CURRENT 1\n\t\t#define
       VFX_COLORMAPPING_DEFAULT 1\n\t\t#define IS_TRANSPARENT_PARTICLE 1\n\t\t#define
-      VFX_BLENDMODE_ADD 1\n\t\t#define VFX_BYPASS_EXPOSURE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_BLENDMODE_ADD 1\n\t\t#define VFX_BYPASS_EXPOSURE 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
       VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float3 color;\n\t\t    float3 position;\n\t\t   
       float alpha;\n\t\t    bool alive;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\t\n\n\t\t\n\t\t#define
@@ -1139,7 +1150,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1159,17 +1171,17 @@ VisualEffectResource:
       float4 color : COLOR0;\n\t\t\t\t#endif\n\t\t\t\t#if USE_SOFT_PARTICLE || USE_ALPHA_TEST
       || USE_EXPOSURE_WEIGHT\n\t\t\t\tnointerpolation float3 builtInInterpolants
       : TEXCOORD0;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
-      posWS : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\n\t\t        float pointSize : PSIZE;\n\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\tstruct
+      posWS : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\n\t\t\t\tfloat pointSize : PSIZE;\n\t\t\n\t\t\t\tUNITY_VERTEX_OUTPUT_STEREO\n\t\t\t};\n\t\t\t\n\t\t\tstruct
       ps_output\n\t\t\t{\n\t\t\t\tfloat4 color : SV_Target0;\n\t\t\t};\n\t\t\n\t\t#define
       VFX_VARYING_PS_INPUTS ps_input\n\t\t#define VFX_VARYING_POSCS pos\n\t\t#define
       VFX_VARYING_COLOR color.rgb\n\t\t#define VFX_VARYING_ALPHA color.a\n\t\t#define
       VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE builtInInterpolants.x\n\t\t#define
       VFX_VARYING_ALPHATHRESHOLD builtInInterpolants.y\n\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t#define
       VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t#if USE_EXPOSURE_WEIGHT\n\t\t#define
-      VFX_VARYING_EXPOSUREWEIGHT builtInInterpolants.z\n\t\t#endif\n\t\t\t\n\t\t\t#if
-      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
-      VFX_VARYING_PS_INPUTS and VFX_VARYING_POSCS must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      VFX_VARYING_EXPOSUREWEIGHT builtInInterpolants.z\n\t\t#endif\n\t\t\n\t\t\t#define
+      SHADERPASS SHADERPASS_FORWARD_UNLIT\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS and VFX_VARYING_POSCS
+      must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\t\n\t\t\t\n\t\t\tstruct
       vs_input\n\t\t\t{\n\t\t\t\tVFX_DECLARE_INSTANCE_ID\n\t\t\t};\n\t\t\t\n\t\t\t#pragma
       vertex vert\n\t\t\t\n\t\t\tVFX_VARYING_PS_INPUTS vert(uint id : SV_VertexID,
@@ -1200,7 +1212,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1214,7 +1227,7 @@ VisualEffectResource:
       VFX_COLORMAPPING_GRADIENTMAPPED\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\to.color = SampleGradient(gradient,
       VFX_TEXTURE_COLOR.a * color.a) * float4(color.rgb,1.0);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\to.color
       = VFXApplyPreExposure(o.color, i);\n\t\t\t\to.color = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
-      = saturate(o.color.a);\n\t\t        o.color = VFXTransformFinalColor(o.color);\n\t\t\t\treturn
+      = saturate(o.color.a);\n\t\t\t\to.color = VFXTransformFinalColor(o.color);\n\t\t\t\treturn
       o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
   - compute: 1
     name: '[System 3]Initialize Particle Strip'
@@ -1226,7 +1239,7 @@ VisualEffectResource:
       1\n#define VFX_USE_POSITION_SOURCE 1\n#define STRIP_COUNT 200u\n#define PARTICLE_PER_STRIP_COUNT
       240u\n#define VFX_USE_SPAWNER_FROM_GPU 1\n#define HAS_STRIPS 1\n#define VFX_LOCAL_SPACE
       1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float uniform_b;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n   
+      float uniform_a;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float3 position;\n    float lifetime;\n    float size;\n    uint stripIndex;\n   
       float3 velocity;\n    float age;\n    bool alive;\n};\n\nstruct SourceAttributes\n{\n   
       float3 position;\n};\n\n\n\r\n\r\n#define USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT
@@ -1273,21 +1286,22 @@ VisualEffectResource:
       attributes.alive = (bool)true;\n        sourceAttributes.position = asfloat(sourceAttributeBuffer.Load3((sourceIndex
       * 0x4 + 0x800) << 2));\n        \n\r\n#if VFX_USE_PARTICLEID_CURRENT\r\n        
       attributes.particleId = particleIndex;\r\n#endif\r\n#if VFX_USE_SEED_CURRENT\r\n       
-      attributes.seed = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if HAS_STRIPS\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n        uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex
-      = min(stripIndex, STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex,
-      stripIndex))\r\n            return;\r\n\r\n        const StripData stripData
-      = GetStripDataFromStripIndex(stripIndex, PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex,
-      attributes, stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic
-      on random with strip\r\n#endif\r\n        \r\n        {\n            float3
-      tmp_u = sourceAttributes.position;\n            SetAttribute_CAC02F9E( /*inout
-      */attributes.position, tmp_u);\n        }\n        {\n            uint tmp_v
-      = attributes.stripIndex ^ asuint(uniform_b);\n            float tmp_w = FixedRand(tmp_v);\n           
-      float tmp_y = tmp_w * (float)2;\n            float tmp_z = (float)1 + tmp_y;\n           
-      SetAttribute_F0142CB9( /*inout */attributes.lifetime, tmp_z);\n        }\n       
-      {\n            SetAttribute_3278B22F( /*inout */attributes.size, (float)0.0799999982);\n       
-      }\n        \n\r\n\t\t\r\n#if VFX_USE_ALIVE_CURRENT\r\n        if (attributes.alive)\r\n#endif      
-      \r\n        {\r\n#if USE_DEAD_LIST\r\n\t        uint deadIndex = deadListIn.DecrementCounter();\r\n           
+      attributes.seed = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if VFX_USE_SPAWNINDEX_CURRENT\r\n       
+      attributes.spawnIndex = id;\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
+      uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex = min(stripIndex,
+      STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex, stripIndex))\r\n           
+      return;\r\n\r\n        const StripData stripData = GetStripDataFromStripIndex(stripIndex,
+      PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex, attributes,
+      stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic on random
+      with strip\r\n#endif\r\n        \r\n        {\n            float3 tmp_u = sourceAttributes.position;\n           
+      SetAttribute_CAC02F9E( /*inout */attributes.position, tmp_u);\n        }\n       
+      {\n            uint tmp_v = attributes.stripIndex ^ asuint(uniform_a);\n           
+      float tmp_w = FixedRand(tmp_v);\n            float tmp_y = tmp_w * (float)2;\n           
+      float tmp_z = (float)1 + tmp_y;\n            SetAttribute_F0142CB9( /*inout
+      */attributes.lifetime, tmp_z);\n        }\n        {\n            SetAttribute_3278B22F(
+      /*inout */attributes.size, (float)0.0799999982);\n        }\n        \n\r\n\t\t\r\n#if
+      VFX_USE_ALIVE_CURRENT\r\n        if (attributes.alive)\r\n#endif       \r\n       
+      {\r\n#if USE_DEAD_LIST\r\n\t        uint deadIndex = deadListIn.DecrementCounter();\r\n           
       uint index = deadListIn[deadIndex];\r\n#else\r\n            uint index = particleIndex;\r\n#endif\r\n           
       attributeBuffer.Store3((index * 0x4 + 0x0) << 2,asuint(attributes.position));\n           
       attributeBuffer.Store((index * 0x1 + 0x2EE00) << 2,asuint(attributes.lifetime));\n           
@@ -1305,7 +1319,7 @@ VisualEffectResource:
       VFX_USE_AGE_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT 1\n#define STRIP_COUNT
       200u\n#define PARTICLE_PER_STRIP_COUNT 240u\n#define HAS_STRIPS 1\n#define
       VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4x4 InvFieldTransform_a;\n    float4x4 FieldTransform_a;\n    float4 uniform_d;\n   
+      float4x4 InvFieldTransform_a;\n    float4x4 FieldTransform_a;\n    float4 uniform_a;\n   
       float deltaTime_a;\n    uint3 PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float3 position;\n    float lifetime;\n    float3 velocity;\n    float mass;\n   
       float age;\n    bool alive;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
@@ -1319,7 +1333,7 @@ VisualEffectResource:
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\n\r\n\r\nvoid
       Turbulence_18D(float3 position, inout float3 velocity, float mass, float4x4
       InvFieldTransform, float4x4 FieldTransform, float Intensity, float Drag, float
-      frequency, float roughness, float lacunarity, int octaves, float deltaTime)
+      frequency, int octaves, float roughness, float lacunarity, float deltaTime)
       /*Mode:Relative NoiseType:Value */\n{\n    float3 vectorFieldCoord = mul(InvFieldTransform,
       float4(position,1.0f)).xyz;\n    \n    float3 value = GenerateValueCurlNoise(vectorFieldCoord
       + 0.5f, frequency, octaves, roughness, lacunarity);\n    value = mul(FieldTransform,float4(value,0.0f)).xyz
@@ -1344,10 +1358,10 @@ VisualEffectResource:
       HAS_STRIPS\r\n            const StripData stripData = GetStripDataFromParticleIndex(index,
       PARTICLE_PER_STRIP_COUNT);\r\n            InitStripAttributes(index, attributes,
       stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    float tmp_x = attributes.age
-      / attributes.lifetime;\n\t\t\t    float tmp_y = SampleCurve(uniform_d,tmp_x);\n\t\t\t   
+      / attributes.lifetime;\n\t\t\t    float tmp_y = SampleCurve(uniform_a,tmp_x);\n\t\t\t   
       Turbulence_18D(attributes.position,  /*inout */attributes.velocity, attributes.mass,
       InvFieldTransform_a, FieldTransform_a, tmp_y, (float)1, (float)1.29999995,
-      (float)0.5, (float)2, (int)1, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
+      (int)1, (float)0.5, (float)2, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\t\n\r\n\r\n\t\t\tif (attributes.alive)\r\n\t\t\t{\r\n\t\t\t\tattributeBuffer.Store3((index
@@ -1377,9 +1391,9 @@ VisualEffectResource:
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
       float tmp_x = attributes.age / attributes.lifetime;\n\t\t    float tmp_y =
-      SampleCurve(uniform_d,tmp_x);\n\t\t    Turbulence_18D(attributes.position, 
+      SampleCurve(uniform_a,tmp_x);\n\t\t    Turbulence_18D(attributes.position, 
       /*inout */attributes.velocity, attributes.mass, InvFieldTransform_a, FieldTransform_a,
-      tmp_y, (float)1, (float)1.29999995, (float)0.5, (float)2, (int)1, deltaTime_a);\n\t\t}\n\t\tEulerIntegration(
+      tmp_y, (float)1, (float)1.29999995, (int)1, (float)0.5, (float)2, deltaTime_a);\n\t\t}\n\t\tEulerIntegration(
       /*inout */attributes.position, attributes.velocity, deltaTime_a);\n\t\tAge(
       /*inout */attributes.age, deltaTime_a);\n\t\tReap(attributes.age, attributes.lifetime, 
       /*inout */attributes.alive);\n\t\t\n\r\n\t\tattributeBuffer.Store3((index *
@@ -1408,16 +1422,16 @@ VisualEffectResource:
       PARTICLE_PER_STRIP_COUNT 240u\n\t\t#define VFX_COLORMAPPING_DEFAULT 1\n\t\t#define
       IS_OPAQUE_PARTICLE 1\n\t\t#define USE_ALPHA_TEST 1\n\t\t#define VFX_BYPASS_EXPOSURE
       1\n\t\t#define HAS_STRIPS 1\n\t\t#define VFX_STRIPS_UV_STRECHED 1\n\t\t#define
-      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define VFX_LOCAL_SPACE 1\n\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
-      float uniform_b;\n\t\t    float uniform_c;\n\t\t    uint2 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
+      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
+      float uniform_a;\n\t\t    float uniform_b;\n\t\t    uint2 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct
       Attributes\n\t\t{\n\t\t    float3 position;\n\t\t    float lifetime;\n\t\t   
       float size;\n\t\t    uint stripIndex;\n\t\t    float age;\n\t\t    float3 color;\n\t\t   
       float alpha;\n\t\t    float3 axisX;\n\t\t    float3 axisY;\n\t\t    float3
       axisZ;\n\t\t    float angleX;\n\t\t    float angleY;\n\t\t    float angleZ;\n\t\t   
       float pivotX;\n\t\t    float pivotY;\n\t\t    float pivotZ;\n\t\t};\n\t\t\n\t\tstruct
       SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D mainTexture;\n\t\tSamplerState
-      samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\n\t\t\n\t\t#define
+      samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
       HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
       VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
@@ -1452,7 +1466,9 @@ VisualEffectResource:
       uv\n\t\t\t\n\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t#define VFX_VARYING_POSWS
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
+      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -1515,11 +1531,11 @@ VisualEffectResource:
       = (float)0;\n\t\t\t\t\t\tattributes.pivotZ = (float)0;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t//
       Initialize built-in needed attributes\n\t\t\t\t\t\t#if HAS_STRIPS\n\t\t\t\t\t\tInitStripAttributes(index,
       attributes, stripData);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t   
-      uint tmp_w = attributes.stripIndex ^ asuint(uniform_b);\n\t\t\t\t    float
+      uint tmp_w = attributes.stripIndex ^ asuint(uniform_a);\n\t\t\t\t    float
       tmp_x = FixedRand(tmp_w);\n\t\t\t\t    float tmp_z = tmp_x * (float)0.400000006;\n\t\t\t\t   
       float tmp_ba = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bc
       = tmp_ba * (float)0.200000003;\n\t\t\t\t    float tmp_bd = tmp_z + tmp_bc;\n\t\t\t\t   
-      float tmp_be = tmp_bd + uniform_c;\n\t\t\t\t    float tmp_bf = frac(tmp_be);\n\t\t\t\t   
+      float tmp_be = tmp_bd + uniform_b;\n\t\t\t\t    float tmp_bf = frac(tmp_be);\n\t\t\t\t   
       float3 tmp_bi = float3(tmp_bf, (float)1, (float)0.75);\n\t\t\t\t    float3
       tmp_bj = HSVtoRGB(tmp_bi);\n\t\t\t\t    float tmp_bk = tmp_bj[0];\n\t\t\t\t   
       float tmp_bl = tmp_bj[1];\n\t\t\t\t    float tmp_bm = tmp_bj[2];\n\t\t\t\t   
@@ -1527,17 +1543,19 @@ VisualEffectResource:
       /*inout */attributes.color, tmp_bn);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
       !HAS_STRIPS\n\t\t\t\tif (!attributes.alive)\n\t\t\t\t\treturn o;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#if
       VFX_PRIMITIVE_QUAD\n\t\t\t\n\t\t\t#if HAS_STRIPS\n\t\t\t#if VFX_STRIPS_UV_STRECHED\n\t\t\t\to.VFX_VARYING_UV.x
-      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
-      = PARTICLE_IN_EDGE;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id
-      & 2) >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y
-      - 0.5f);\n\t\t\t\t\n\t\t\t\t// Orient strips along their tangents\n\t\t\t\tattributes.axisX
-      = GetStripTangent(attributes.position, currentIndex, stripData);\n\t\t\t#if
-      !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ = attributes.position -
-      GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY = normalize(cross(attributes.axisZ,
-      attributes.axisX));\n\t\t\t\tattributes.axisZ = normalize(cross(attributes.axisX,
-      attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x = float(id
-      & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst float2
-      vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
+      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#elif VFX_STRIPS_UV_PER_SEGMENT\n\t\t\t\to.VFX_VARYING_UV.x
+      = PARTICLE_IN_EDGE;\n\t\t\t#else\n\t\t\t\t\n\t\t\t    o.VFX_VARYING_UV.x =
+      texCoord;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2)
+      >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y - 0.5f);\n\t\t\t\t\n\t\t\t#if
+      VFX_STRIPS_SWAP_UV\n\t\t\t\to.VFX_VARYING_UV.xy = float2(1.0f - o.VFX_VARYING_UV.y,
+      o.VFX_VARYING_UV.x);\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\t// Orient strips along
+      their tangents\n\t\t\t\tattributes.axisX = GetStripTangent(attributes.position,
+      currentIndex, stripData);\n\t\t\t#if !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ
+      = attributes.position - GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY
+      = normalize(cross(attributes.axisZ, attributes.axisX));\n\t\t\t\tattributes.axisZ
+      = normalize(cross(attributes.axisX, attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
+      = float(id & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst
+      float2 vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
       VFX_PRIMITIVE_TRIANGLE\n\t\t\t\n\t\t\t\tconst float2 kOffsets[] = {\n\t\t\t\t\tfloat2(-0.5f,
       \t-0.288675129413604736328125f),\n\t\t\t\t\tfloat2(0.0f, \t0.57735025882720947265625f),\n\t\t\t\t\tfloat2(0.5f,\t-0.288675129413604736328125f),\n\t\t\t\t};\n\t\t\t\t\n\t\t\t\tconst
       float kUVScale = 0.866025388240814208984375f;\n\t\t\t\t\n\t\t\t\tconst float2
@@ -1549,7 +1567,9 @@ VisualEffectResource:
       size3 = float3(attributes.size,attributes.size,attributes.size);\n\t\t\t\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\t\t\t\tsize3.x *= attributes.scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
       VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y *= attributes.scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
-      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tconst
+      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if
+      HAS_STRIPS\n\t\t\t\tsize3 += size3 < 0.0f ? -VFX_EPSILON : VFX_EPSILON; //
+      Add an epsilon so that size is never 0 for strips\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\tconst
       float4x4 elementToVFX = GetElementToVFXMatrix(\n\t\t\t\t\tattributes.axisX,\n\t\t\t\t\tattributes.axisY,\n\t\t\t\t\tattributes.axisZ,\n\t\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\n\t\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\n\t\t\t\t\tsize3,\n\t\t\t\t\tattributes.position);\n\t\t\t\t\t\n\t\t\t\tfloat3
       inputVertexPosition = float3(vOffsets, 0.0f);\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(inputVertexPosition,
       1.0f)).xyz;\n\t\t\t\n\t\t\t\to.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);\n\t\t\t   
@@ -1562,7 +1582,7 @@ VisualEffectResource:
       VFX_VARYING_BENTFACTORS\n\t\t\t\t\n\t\t\t\t#if HAS_STRIPS\n\t\t\t\t#define
       BENT_FACTOR_MULTIPLIER 2.0f\n\t\t\t\t#else\n\t\t\t\t#define BENT_FACTOR_MULTIPLIER
       1.41421353816986083984375f\n\t\t\t\t#endif\n\t\t\t\to.VFX_VARYING_BENTFACTORS
-      = vOffsets * bentNormalFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      = vOffsets * normalBendingFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
       defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] =
       float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor (int
@@ -1584,7 +1604,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\tfloat
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
       alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
       alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1634,7 +1655,9 @@ VisualEffectResource:
       uv\n\t\t\t\n\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t#define VFX_VARYING_POSWS
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
+      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -1697,11 +1720,11 @@ VisualEffectResource:
       = (float)0;\n\t\t\t\t\t\tattributes.pivotZ = (float)0;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t//
       Initialize built-in needed attributes\n\t\t\t\t\t\t#if HAS_STRIPS\n\t\t\t\t\t\tInitStripAttributes(index,
       attributes, stripData);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t   
-      uint tmp_w = attributes.stripIndex ^ asuint(uniform_b);\n\t\t\t\t    float
+      uint tmp_w = attributes.stripIndex ^ asuint(uniform_a);\n\t\t\t\t    float
       tmp_x = FixedRand(tmp_w);\n\t\t\t\t    float tmp_z = tmp_x * (float)0.400000006;\n\t\t\t\t   
       float tmp_ba = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bc
       = tmp_ba * (float)0.200000003;\n\t\t\t\t    float tmp_bd = tmp_z + tmp_bc;\n\t\t\t\t   
-      float tmp_be = tmp_bd + uniform_c;\n\t\t\t\t    float tmp_bf = frac(tmp_be);\n\t\t\t\t   
+      float tmp_be = tmp_bd + uniform_b;\n\t\t\t\t    float tmp_bf = frac(tmp_be);\n\t\t\t\t   
       float3 tmp_bi = float3(tmp_bf, (float)1, (float)0.75);\n\t\t\t\t    float3
       tmp_bj = HSVtoRGB(tmp_bi);\n\t\t\t\t    float tmp_bk = tmp_bj[0];\n\t\t\t\t   
       float tmp_bl = tmp_bj[1];\n\t\t\t\t    float tmp_bm = tmp_bj[2];\n\t\t\t\t   
@@ -1709,17 +1732,19 @@ VisualEffectResource:
       /*inout */attributes.color, tmp_bn);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
       !HAS_STRIPS\n\t\t\t\tif (!attributes.alive)\n\t\t\t\t\treturn o;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#if
       VFX_PRIMITIVE_QUAD\n\t\t\t\n\t\t\t#if HAS_STRIPS\n\t\t\t#if VFX_STRIPS_UV_STRECHED\n\t\t\t\to.VFX_VARYING_UV.x
-      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
-      = PARTICLE_IN_EDGE;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id
-      & 2) >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y
-      - 0.5f);\n\t\t\t\t\n\t\t\t\t// Orient strips along their tangents\n\t\t\t\tattributes.axisX
-      = GetStripTangent(attributes.position, currentIndex, stripData);\n\t\t\t#if
-      !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ = attributes.position -
-      GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY = normalize(cross(attributes.axisZ,
-      attributes.axisX));\n\t\t\t\tattributes.axisZ = normalize(cross(attributes.axisX,
-      attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x = float(id
-      & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst float2
-      vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
+      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#elif VFX_STRIPS_UV_PER_SEGMENT\n\t\t\t\to.VFX_VARYING_UV.x
+      = PARTICLE_IN_EDGE;\n\t\t\t#else\n\t\t\t\t\n\t\t\t    o.VFX_VARYING_UV.x =
+      texCoord;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2)
+      >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y - 0.5f);\n\t\t\t\t\n\t\t\t#if
+      VFX_STRIPS_SWAP_UV\n\t\t\t\to.VFX_VARYING_UV.xy = float2(1.0f - o.VFX_VARYING_UV.y,
+      o.VFX_VARYING_UV.x);\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\t// Orient strips along
+      their tangents\n\t\t\t\tattributes.axisX = GetStripTangent(attributes.position,
+      currentIndex, stripData);\n\t\t\t#if !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ
+      = attributes.position - GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY
+      = normalize(cross(attributes.axisZ, attributes.axisX));\n\t\t\t\tattributes.axisZ
+      = normalize(cross(attributes.axisX, attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
+      = float(id & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst
+      float2 vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
       VFX_PRIMITIVE_TRIANGLE\n\t\t\t\n\t\t\t\tconst float2 kOffsets[] = {\n\t\t\t\t\tfloat2(-0.5f,
       \t-0.288675129413604736328125f),\n\t\t\t\t\tfloat2(0.0f, \t0.57735025882720947265625f),\n\t\t\t\t\tfloat2(0.5f,\t-0.288675129413604736328125f),\n\t\t\t\t};\n\t\t\t\t\n\t\t\t\tconst
       float kUVScale = 0.866025388240814208984375f;\n\t\t\t\t\n\t\t\t\tconst float2
@@ -1731,7 +1756,9 @@ VisualEffectResource:
       size3 = float3(attributes.size,attributes.size,attributes.size);\n\t\t\t\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\t\t\t\tsize3.x *= attributes.scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
       VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y *= attributes.scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
-      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tconst
+      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if
+      HAS_STRIPS\n\t\t\t\tsize3 += size3 < 0.0f ? -VFX_EPSILON : VFX_EPSILON; //
+      Add an epsilon so that size is never 0 for strips\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\tconst
       float4x4 elementToVFX = GetElementToVFXMatrix(\n\t\t\t\t\tattributes.axisX,\n\t\t\t\t\tattributes.axisY,\n\t\t\t\t\tattributes.axisZ,\n\t\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\n\t\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\n\t\t\t\t\tsize3,\n\t\t\t\t\tattributes.position);\n\t\t\t\t\t\n\t\t\t\tfloat3
       inputVertexPosition = float3(vOffsets, 0.0f);\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(inputVertexPosition,
       1.0f)).xyz;\n\t\t\t\n\t\t\t\to.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);\n\t\t\t   
@@ -1744,7 +1771,7 @@ VisualEffectResource:
       VFX_VARYING_BENTFACTORS\n\t\t\t\t\n\t\t\t\t#if HAS_STRIPS\n\t\t\t\t#define
       BENT_FACTOR_MULTIPLIER 2.0f\n\t\t\t\t#else\n\t\t\t\t#define BENT_FACTOR_MULTIPLIER
       1.41421353816986083984375f\n\t\t\t\t#endif\n\t\t\t\to.VFX_VARYING_BENTFACTORS
-      = vOffsets * bentNormalFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      = vOffsets * normalBendingFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
       defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] =
       float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor (int
@@ -1766,7 +1793,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\tfloat
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
       alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
       alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1801,9 +1829,9 @@ VisualEffectResource:
       SV_POSITION;\n\t\t\t\t#if USE_FLIPBOOK_INTERPOLATION\n\t\t\t\tfloat4 uv : TEXCOORD0;\n\t\t\t\t#else\n\t\t\t\tfloat2
       uv : TEXCOORD0;\t\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_COLOR_INTERPOLATOR\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float4 color : COLOR0;\n\t\t\t\t#endif\n\t\t\t\t#if USE_SOFT_PARTICLE || USE_ALPHA_TEST
-      || USE_FLIPBOOK_INTERPOLATION || USE_EXPOSURE_WEIGHT\n\t\t\t\t// x: inverse
-      soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t// z:
-      frame blending factor\n\t\t\t\t// w: exposure weight\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
+      || USE_FLIPBOOK_INTERPOLATION || USE_EXPOSURE_WEIGHT || WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t//
+      x: inverse soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t//
+      z: frame blending factor\n\t\t\t\t// w: exposure weight\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float4 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t//
       x: motion vectors scale X\n\t\t\t\t// y: motion vectors scale Y\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float2 builtInInterpolants2 : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
@@ -1822,11 +1850,12 @@ VisualEffectResource:
       VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t#if USE_EXPOSURE_WEIGHT\n\t\t#define
       VFX_VARYING_EXPOSUREWEIGHT builtInInterpolants.w\n\t\t#endif\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t#endif\n\t\t\n\t\t#if SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t#define
-      VFX_VARYING_NORMAL normal\n\t\t#endif\n\t\t#if SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t#define
-      VFX_VARYING_TANGENT tangent\n\t\t#endif\n\t\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
-      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
-      and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      cPosPrevious\n\t\t#endif\n\t\t\n\t\t#define SHADERPASS SHADERPASS_FORWARD_UNLIT\n\t\t\t\n\t\t#if
+      SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t#define VFX_VARYING_NORMAL normal\n\t\t#endif\n\t\t#if
+      SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t#define VFX_VARYING_TANGENT tangent\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
+      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
+      VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_FDD06EC7(inout float3 color, float3 Color) /*attribute:color Composition:Overwrite
       Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    color = Color;\n\t\t\t}\n\t\t\t\n\n\t\t\t\n\t\t\t#if
@@ -1887,11 +1916,11 @@ VisualEffectResource:
       = (float)0;\n\t\t\t\t\t\tattributes.pivotZ = (float)0;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t//
       Initialize built-in needed attributes\n\t\t\t\t\t\t#if HAS_STRIPS\n\t\t\t\t\t\tInitStripAttributes(index,
       attributes, stripData);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t   
-      uint tmp_w = attributes.stripIndex ^ asuint(uniform_b);\n\t\t\t\t    float
+      uint tmp_w = attributes.stripIndex ^ asuint(uniform_a);\n\t\t\t\t    float
       tmp_x = FixedRand(tmp_w);\n\t\t\t\t    float tmp_z = tmp_x * (float)0.400000006;\n\t\t\t\t   
       float tmp_ba = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bc
       = tmp_ba * (float)0.200000003;\n\t\t\t\t    float tmp_bd = tmp_z + tmp_bc;\n\t\t\t\t   
-      float tmp_be = tmp_bd + uniform_c;\n\t\t\t\t    float tmp_bf = frac(tmp_be);\n\t\t\t\t   
+      float tmp_be = tmp_bd + uniform_b;\n\t\t\t\t    float tmp_bf = frac(tmp_be);\n\t\t\t\t   
       float3 tmp_bi = float3(tmp_bf, (float)1, (float)0.75);\n\t\t\t\t    float3
       tmp_bj = HSVtoRGB(tmp_bi);\n\t\t\t\t    float tmp_bk = tmp_bj[0];\n\t\t\t\t   
       float tmp_bl = tmp_bj[1];\n\t\t\t\t    float tmp_bm = tmp_bj[2];\n\t\t\t\t   
@@ -1899,17 +1928,19 @@ VisualEffectResource:
       /*inout */attributes.color, tmp_bn);\n\t\t\t\t}\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
       !HAS_STRIPS\n\t\t\t\tif (!attributes.alive)\n\t\t\t\t\treturn o;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#if
       VFX_PRIMITIVE_QUAD\n\t\t\t\n\t\t\t#if HAS_STRIPS\n\t\t\t#if VFX_STRIPS_UV_STRECHED\n\t\t\t\to.VFX_VARYING_UV.x
-      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
-      = PARTICLE_IN_EDGE;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id
-      & 2) >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y
-      - 0.5f);\n\t\t\t\t\n\t\t\t\t// Orient strips along their tangents\n\t\t\t\tattributes.axisX
-      = GetStripTangent(attributes.position, currentIndex, stripData);\n\t\t\t#if
-      !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ = attributes.position -
-      GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY = normalize(cross(attributes.axisZ,
-      attributes.axisX));\n\t\t\t\tattributes.axisZ = normalize(cross(attributes.axisX,
-      attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x = float(id
-      & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst float2
-      vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
+      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#elif VFX_STRIPS_UV_PER_SEGMENT\n\t\t\t\to.VFX_VARYING_UV.x
+      = PARTICLE_IN_EDGE;\n\t\t\t#else\n\t\t\t\t\n\t\t\t    o.VFX_VARYING_UV.x =
+      texCoord;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2)
+      >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y - 0.5f);\n\t\t\t\t\n\t\t\t#if
+      VFX_STRIPS_SWAP_UV\n\t\t\t\to.VFX_VARYING_UV.xy = float2(1.0f - o.VFX_VARYING_UV.y,
+      o.VFX_VARYING_UV.x);\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\t// Orient strips along
+      their tangents\n\t\t\t\tattributes.axisX = GetStripTangent(attributes.position,
+      currentIndex, stripData);\n\t\t\t#if !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ
+      = attributes.position - GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY
+      = normalize(cross(attributes.axisZ, attributes.axisX));\n\t\t\t\tattributes.axisZ
+      = normalize(cross(attributes.axisX, attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
+      = float(id & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst
+      float2 vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
       VFX_PRIMITIVE_TRIANGLE\n\t\t\t\n\t\t\t\tconst float2 kOffsets[] = {\n\t\t\t\t\tfloat2(-0.5f,
       \t-0.288675129413604736328125f),\n\t\t\t\t\tfloat2(0.0f, \t0.57735025882720947265625f),\n\t\t\t\t\tfloat2(0.5f,\t-0.288675129413604736328125f),\n\t\t\t\t};\n\t\t\t\t\n\t\t\t\tconst
       float kUVScale = 0.866025388240814208984375f;\n\t\t\t\t\n\t\t\t\tconst float2
@@ -1921,7 +1952,9 @@ VisualEffectResource:
       size3 = float3(attributes.size,attributes.size,attributes.size);\n\t\t\t\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\t\t\t\tsize3.x *= attributes.scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
       VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y *= attributes.scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
-      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tconst
+      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if
+      HAS_STRIPS\n\t\t\t\tsize3 += size3 < 0.0f ? -VFX_EPSILON : VFX_EPSILON; //
+      Add an epsilon so that size is never 0 for strips\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\tconst
       float4x4 elementToVFX = GetElementToVFXMatrix(\n\t\t\t\t\tattributes.axisX,\n\t\t\t\t\tattributes.axisY,\n\t\t\t\t\tattributes.axisZ,\n\t\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\n\t\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\n\t\t\t\t\tsize3,\n\t\t\t\t\tattributes.position);\n\t\t\t\t\t\n\t\t\t\tfloat3
       inputVertexPosition = float3(vOffsets, 0.0f);\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(inputVertexPosition,
       1.0f)).xyz;\n\t\t\t\n\t\t\t\to.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);\n\t\t\t   
@@ -1934,7 +1967,7 @@ VisualEffectResource:
       VFX_VARYING_BENTFACTORS\n\t\t\t\t\n\t\t\t\t#if HAS_STRIPS\n\t\t\t\t#define
       BENT_FACTOR_MULTIPLIER 2.0f\n\t\t\t\t#else\n\t\t\t\t#define BENT_FACTOR_MULTIPLIER
       1.41421353816986083984375f\n\t\t\t\t#endif\n\t\t\t\to.VFX_VARYING_BENTFACTORS
-      = vOffsets * bentNormalFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      = vOffsets * normalBendingFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
       defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] =
       float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor (int
@@ -1956,7 +1989,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\tfloat
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\tfloat
       alphaThreshold = (float)0;\n\t\t\t\t\t\t{\n\t\t\t\t\t\t    \n\t\t\t\t\t\t   
       alphaThreshold = (float)0.5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -1971,8 +2005,8 @@ VisualEffectResource:
       = motionVectorScale * invFlipBookSize;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t   
       \n\t\t\t    \n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t#if
-      VFX_SHADERGRAPH            \n\t\t    \n\t\t#endif\n\t\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tps_output
+      VFX_SHADERGRAPH\n\t\t\t\n\t\t#endif\n\t\t\t\t\n\t\t\t#pragma fragment frag\n\t\t\tps_output
+      frag(ps_input i)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tps_output
       o = (ps_output)0;\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\n\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_NORMAL\n\t\t\t\t\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t\t\t\tconst
       float faceMul = frontFace ? 1.0f : -1.0f;\n\t\t\t\t\t\t\t#else\n\t\t\t\t\t\t\tconst
@@ -2001,13 +2035,14 @@ VisualEffectResource:
       VFX_COLORMAPPING_GRADIENTMAPPED\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\to.color = SampleGradient(gradient,
       VFX_TEXTURE_COLOR.a * color.a) * float4(color.rgb,1.0);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\to.color
       = VFXApplyPreExposure(o.color, i);\n\t\t#endif\n\t\t\n\t\t\t\to.color = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
-      = saturate(o.color.a);\n\t\t        o.color = VFXTransformFinalColor(o.color);\n\t\t\t\t\n\t\t#if
+      = saturate(o.color.a);\n\t\t\t\to.color = VFXTransformFinalColor(o.color);\n\t\t\t\t\n\t\t#if
       WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\n\t\t\t\t\t\tfloat2 velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w)
       - (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t#if
       UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\tfloat4
       encodedMotionVector = 0.0f;\n\t\t\t\t\t\tVFXEncodeMotionVector(velocity * 0.5f,
-      encodedMotionVector);\n\t\t\t\t\t\t\n\t\t\t\to.outMotionVector = encodedMotionVector;\n\t\t#endif\n\t\t\t\treturn
-      o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
+      encodedMotionVector);\n\t\t\t\t\t\t\n\t\t\t\to.outMotionVector = encodedMotionVector;\n\t\t       
+      o.outMotionVector.a = o.color.a < i.VFX_VARYING_ALPHATHRESHOLD ? 0.0f : 1.0f;
+      //Independant clipping for motion vector pass\n\t\t#endif\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
   - compute: 1
     name: '[System 4]Initialize Particle'
     source: "#pragma kernel CSMain\r\n#define NB_THREADS_PER_GROUP 64\n#define HAS_ATTRIBUTES
@@ -2016,7 +2051,7 @@ VisualEffectResource:
       1\n#define VFX_USE_POSITION_CURRENT 1\n#define VFX_USE_PARTICLEID_CURRENT 1\n#define
       VFX_USE_VELOCITY_CURRENT 1\n#define VFX_USE_ALIVE_CURRENT 1\n#define VFX_USE_AGE_CURRENT
       1\n#define VFX_LOCAL_SPACE 1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float4x4 uniform_b;\n    float uniform_c;\n    float uniform_d;\n    uint2
+      float4x4 uniform_a;\n    float uniform_b;\n    float uniform_c;\n    uint2
       PADDING_0;\nCBUFFER_END\n\nstruct Attributes\n{\n    float lifetime;\n    uint
       seed;\n    float3 position;\n    uint particleId;\n    float3 velocity;\n   
       bool alive;\n    float age;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
@@ -2068,26 +2103,27 @@ VisualEffectResource:
       attributes.velocity = float3(0, 0, 0);\n        attributes.alive = (bool)true;\n       
       attributes.age = (float)0;\n        \n\r\n#if VFX_USE_PARTICLEID_CURRENT\r\n        
       attributes.particleId = particleIndex;\r\n#endif\r\n#if VFX_USE_SEED_CURRENT\r\n       
-      attributes.seed = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if HAS_STRIPS\r\n#if
-      !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n        uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex
-      = min(stripIndex, STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex,
-      stripIndex))\r\n            return;\r\n\r\n        const StripData stripData
-      = GetStripDataFromStripIndex(stripIndex, PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex,
-      attributes, stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic
-      on random with strip\r\n#endif\r\n        \r\n        {\n            SetAttribute_F01429A3(
+      attributes.seed = WangHash(particleIndex ^ systemSeed);\r\n#endif\r\n#if VFX_USE_SPAWNINDEX_CURRENT\r\n       
+      attributes.spawnIndex = id;\r\n#endif\r\n#if HAS_STRIPS\r\n#if !VFX_USE_SPAWNER_FROM_GPU\r\n\t\t\r\n#else\r\n       
+      uint stripIndex = sourceIndex;\r\n#endif\r\n\t\tstripIndex = min(stripIndex,
+      STRIP_COUNT);\r\n\r\n        if (!GetParticleIndex(particleIndex, stripIndex))\r\n           
+      return;\r\n\r\n        const StripData stripData = GetStripDataFromStripIndex(stripIndex,
+      PARTICLE_PER_STRIP_COUNT);\r\n\t\tInitStripAttributes(particleIndex, attributes,
+      stripData);\r\n\t\t// TODO Change seed to be sure we're deterministic on random
+      with strip\r\n#endif\r\n        \r\n        {\n            SetAttribute_F01429A3(
       /*inout */attributes.lifetime,  /*inout */attributes.seed, (float)1, (float)2);\n       
-      }\n        {\n            uint tmp_bb = attributes.particleId ^ asuint(uniform_c);\n           
+      }\n        {\n            uint tmp_bb = attributes.particleId ^ asuint(uniform_b);\n           
       float tmp_bc = FixedRand(tmp_bb);\n            float tmp_be = tmp_bc * (float)6.28318548;\n           
       float tmp_bf = cos(tmp_be);\n            float tmp_bg = sin(tmp_be);\n           
       float2 tmp_bh = float2(tmp_bf, tmp_bg);\n            uint tmp_bk = attributes.particleId
-      ^ asuint(uniform_d);\n            float tmp_bl = FixedRand(tmp_bk);\n           
+      ^ asuint(uniform_c);\n            float tmp_bl = FixedRand(tmp_bk);\n           
       float tmp_bn = tmp_bl * (float)2;\n            float tmp_bo = (float)-1 + tmp_bn;\n           
       float tmp_bp = tmp_bo * tmp_bo;\n            float tmp_bq = (float)1 - tmp_bp;\n           
       float tmp_bs = pow(tmp_bq, (float)0.5);\n            float2 tmp_bt = float2(tmp_bs,
       tmp_bs);\n            float2 tmp_bu = tmp_bh * tmp_bt;\n            float tmp_bv
       = tmp_bu[0];\n            float tmp_bw = tmp_bu[1];\n            float3 tmp_bx
       = float3(tmp_bv, tmp_bw, tmp_bo);\n            float3 tmp_bz = tmp_bx * float3(0.5,
-      0.5, 0.5);\n            float3 tmp_ca = mul(uniform_b, float4(tmp_bz, 1.0)).xyz;\n           
+      0.5, 0.5);\n            float3 tmp_ca = mul(uniform_a, float4(tmp_bz, 1.0)).xyz;\n           
       SetAttribute_CAC29747( /*inout */attributes.position, tmp_ca);\n        }\n       
       \n\r\n\t\t\r\n#if VFX_USE_ALIVE_CURRENT\r\n        if (attributes.alive)\r\n#endif      
       \r\n        {\r\n#if USE_DEAD_LIST\r\n\t        uint deadIndex = deadListIn.DecrementCounter();\r\n           
@@ -2106,7 +2142,7 @@ VisualEffectResource:
       1\n#define VFX_USE_VELOCITY_CURRENT 1\n#define VFX_USE_MASS_CURRENT 1\n#define
       VFX_USE_ALIVE_CURRENT 1\n#define VFX_USE_AGE_CURRENT 1\n#define VFX_LOCAL_SPACE
       1\n#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\n\r\nCBUFFER_START(parameters)\n   
-      float3 uniform_b;\n    float deltaTime_a;\nCBUFFER_END\n\nstruct Attributes\n{\n   
+      float3 uniform_a;\n    float deltaTime_a;\nCBUFFER_END\n\nstruct Attributes\n{\n   
       float lifetime;\n    float3 position;\n    float3 velocity;\n    float mass;\n   
       bool alive;\n    float age;\n};\n\nstruct SourceAttributes\n{\n};\n\n\n\r\n\r\n#define
       USE_DEAD_LIST (VFX_USE_ALIVE_CURRENT && !HAS_STRIPS)\r\n\r\nRWByteAddressBuffer
@@ -2140,7 +2176,7 @@ VisualEffectResource:
       HAS_STRIPS\r\n            const StripData stripData = GetStripDataFromParticleIndex(index,
       PARTICLE_PER_STRIP_COUNT);\r\n            InitStripAttributes(index, attributes,
       stripData);\r\n#endif\r\n\t\t\t\r\n\t\t\t{\n\t\t\t    float3 tmp_ba = attributes.position
-      + uniform_b;\n\t\t\t    float3 tmp_bd = GeneratePerlinCurlNoise(tmp_ba, float3(1,
+      + uniform_a;\n\t\t\t    float3 tmp_bd = GeneratePerlinCurlNoise(tmp_ba, float3(1,
       0.5, 2).x, (int)1, float3(1, 0.5, 2).y, float3(1, 0.5, 2).z);\n\t\t\t    Force_0(
       /*inout */attributes.velocity, attributes.mass, tmp_bd, deltaTime_a);\n\t\t\t}\n\t\t\t{\n\t\t\t   
       Drag_0( /*inout */attributes.velocity, attributes.mass, (float)1, deltaTime_a);\n\t\t\t}\n\t\t\tEulerIntegration(
@@ -2172,7 +2208,7 @@ VisualEffectResource:
       = attributes.position;\r\n#endif\r\n#if HAS_STRIPS\r\n        const StripData
       stripData = GetStripDataFromParticleIndex(index, PARTICLE_PER_STRIP_COUNT);\r\n       
       InitStripAttributes(index, attributes, stripData);\r\n#endif\r\n\t\t\r\n\t\t{\n\t\t   
-      float3 tmp_ba = attributes.position + uniform_b;\n\t\t    float3 tmp_bd = GeneratePerlinCurlNoise(tmp_ba,
+      float3 tmp_ba = attributes.position + uniform_a;\n\t\t    float3 tmp_bd = GeneratePerlinCurlNoise(tmp_ba,
       float3(1, 0.5, 2).x, (int)1, float3(1, 0.5, 2).y, float3(1, 0.5, 2).z);\n\t\t   
       Force_0( /*inout */attributes.velocity, attributes.mass, tmp_bd, deltaTime_a);\n\t\t}\n\t\t{\n\t\t   
       Drag_0( /*inout */attributes.velocity, attributes.mass, (float)1, deltaTime_a);\n\t\t}\n\t\tEulerIntegration(
@@ -2204,9 +2240,9 @@ VisualEffectResource:
       VFX_USE_SCALEZ_CURRENT 1\n\t\t#define VFX_USE_AGE_CURRENT 1\n\t\t#define VFX_USE_STRIPINDEX_CURRENT
       1\n\t\t#define VFX_COLORMAPPING_DEFAULT 1\n\t\t#define IS_TRANSPARENT_PARTICLE
       1\n\t\t#define VFX_BLENDMODE_ADD 1\n\t\t#define VFX_BYPASS_EXPOSURE 1\n\t\t#define
-      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define VFX_LOCAL_SPACE 1\n\t\t#include
-      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
-      float4 Size_c;\n\t\t    float uniform_b;\n\t\t    float uniform_c;\n\t\t   
+      VFX_PRIMITIVE_QUAD 1\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t#define
+      VFX_LOCAL_SPACE 1\n\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXDefines.hlsl\"\n\t\t\n\n\t\tCBUFFER_START(parameters)\n\t\t   
+      float4 Size_c;\n\t\t    float uniform_a;\n\t\t    float uniform_b;\n\t\t   
       uint2 PADDING_0;\n\t\tCBUFFER_END\n\t\t\n\t\tstruct Attributes\n\t\t{\n\t\t   
       float lifetime;\n\t\t    float3 position;\n\t\t    float3 color;\n\t\t    float
       alpha;\n\t\t    bool alive;\n\t\t    float3 axisX;\n\t\t    float3 axisY;\n\t\t   
@@ -2214,7 +2250,7 @@ VisualEffectResource:
       angleZ;\n\t\t    float pivotX;\n\t\t    float pivotY;\n\t\t    float pivotZ;\n\t\t   
       float size;\n\t\t    float scaleX;\n\t\t    float scaleY;\n\t\t    float scaleZ;\n\t\t   
       float age;\n\t\t    uint stripIndex;\n\t\t};\n\t\t\n\t\tstruct SourceAttributes\n\t\t{\n\t\t};\n\t\t\n\t\tTexture2D
-      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\n\t\t\n\t\t#define
+      mainTexture;\n\t\tSamplerState samplermainTexture;\n\t\tfloat4 mainTexture_TexelSize;\n\t\t\n\t\t\n\n\t\t\n\t\t#define
       VFX_NEEDS_COLOR_INTERPOLATOR (VFX_USE_COLOR_CURRENT || VFX_USE_ALPHA_CURRENT)\n\t\t#if
       HAS_STRIPS\n\t\t#define VFX_OPTIONAL_INTERPOLATION \n\t\t#else\n\t\t#define
       VFX_OPTIONAL_INTERPOLATION nointerpolation\n\t\t#endif\n\t\t\n\t\tByteAddressBuffer
@@ -2249,7 +2285,9 @@ VisualEffectResource:
       uv\n\t\t\t\n\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t#define VFX_VARYING_POSWS
       posWS\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
+      cPosPrevious\n\t\t\t#endif\n\t\t\t\n\t\t\t#if VFX_PASSDEPTH == VFX_PASSDEPTH_MOTION_VECTOR\n\t\t\t#define
+      SHADERPASS SHADERPASS_MOTION_VECTORS\n\t\t\t#else\n\t\t\t#define SHADERPASS
+      SHADERPASS_DEPTH_ONLY\n\t\t\t#endif\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
       && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
       and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
@@ -2323,11 +2361,11 @@ VisualEffectResource:
       * 0x8 + 0x104) << 2));\n\t\t\t\t\t\tattributes.stripIndex = (uint)0;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t//
       Initialize built-in needed attributes\n\t\t\t\t\t\t#if HAS_STRIPS\n\t\t\t\t\t\tInitStripAttributes(index,
       attributes, stripData);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t   
-      uint tmp_bc = attributes.stripIndex ^ asuint(uniform_b);\n\t\t\t\t    float
+      uint tmp_bc = attributes.stripIndex ^ asuint(uniform_a);\n\t\t\t\t    float
       tmp_bd = FixedRand(tmp_bc);\n\t\t\t\t    float tmp_bf = tmp_bd * (float)0.400000006;\n\t\t\t\t   
       float tmp_bg = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bi
       = tmp_bg * (float)0.200000003;\n\t\t\t\t    float tmp_bj = tmp_bf + tmp_bi;\n\t\t\t\t   
-      float tmp_bk = tmp_bj + uniform_c;\n\t\t\t\t    float tmp_bl = frac(tmp_bk);\n\t\t\t\t   
+      float tmp_bk = tmp_bj + uniform_b;\n\t\t\t\t    float tmp_bl = frac(tmp_bk);\n\t\t\t\t   
       float3 tmp_bo = float3(tmp_bl, (float)1, (float)0.75);\n\t\t\t\t    float3
       tmp_bp = HSVtoRGB(tmp_bo);\n\t\t\t\t    float tmp_bq = tmp_bp[0];\n\t\t\t\t   
       float tmp_br = tmp_bp[1];\n\t\t\t\t    float tmp_bs = tmp_bp[2];\n\t\t\t\t   
@@ -2337,17 +2375,19 @@ VisualEffectResource:
       /*inout */attributes.size, attributes.age, attributes.lifetime, Size_c);\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
       !HAS_STRIPS\n\t\t\t\tif (!attributes.alive)\n\t\t\t\t\treturn o;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#if
       VFX_PRIMITIVE_QUAD\n\t\t\t\n\t\t\t#if HAS_STRIPS\n\t\t\t#if VFX_STRIPS_UV_STRECHED\n\t\t\t\to.VFX_VARYING_UV.x
-      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
-      = PARTICLE_IN_EDGE;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id
-      & 2) >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y
-      - 0.5f);\n\t\t\t\t\n\t\t\t\t// Orient strips along their tangents\n\t\t\t\tattributes.axisX
-      = GetStripTangent(attributes.position, currentIndex, stripData);\n\t\t\t#if
-      !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ = attributes.position -
-      GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY = normalize(cross(attributes.axisZ,
-      attributes.axisX));\n\t\t\t\tattributes.axisZ = normalize(cross(attributes.axisX,
-      attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x = float(id
-      & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst float2
-      vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
+      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#elif VFX_STRIPS_UV_PER_SEGMENT\n\t\t\t\to.VFX_VARYING_UV.x
+      = PARTICLE_IN_EDGE;\n\t\t\t#else\n\t\t\t\t\n\t\t\t    o.VFX_VARYING_UV.x =
+      texCoord;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2)
+      >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y - 0.5f);\n\t\t\t\t\n\t\t\t#if
+      VFX_STRIPS_SWAP_UV\n\t\t\t\to.VFX_VARYING_UV.xy = float2(1.0f - o.VFX_VARYING_UV.y,
+      o.VFX_VARYING_UV.x);\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\t// Orient strips along
+      their tangents\n\t\t\t\tattributes.axisX = GetStripTangent(attributes.position,
+      currentIndex, stripData);\n\t\t\t#if !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ
+      = attributes.position - GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY
+      = normalize(cross(attributes.axisZ, attributes.axisX));\n\t\t\t\tattributes.axisZ
+      = normalize(cross(attributes.axisX, attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
+      = float(id & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst
+      float2 vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
       VFX_PRIMITIVE_TRIANGLE\n\t\t\t\n\t\t\t\tconst float2 kOffsets[] = {\n\t\t\t\t\tfloat2(-0.5f,
       \t-0.288675129413604736328125f),\n\t\t\t\t\tfloat2(0.0f, \t0.57735025882720947265625f),\n\t\t\t\t\tfloat2(0.5f,\t-0.288675129413604736328125f),\n\t\t\t\t};\n\t\t\t\t\n\t\t\t\tconst
       float kUVScale = 0.866025388240814208984375f;\n\t\t\t\t\n\t\t\t\tconst float2
@@ -2359,7 +2399,9 @@ VisualEffectResource:
       size3 = float3(attributes.size,attributes.size,attributes.size);\n\t\t\t\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\t\t\t\tsize3.x *= attributes.scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
       VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y *= attributes.scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
-      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tconst
+      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if
+      HAS_STRIPS\n\t\t\t\tsize3 += size3 < 0.0f ? -VFX_EPSILON : VFX_EPSILON; //
+      Add an epsilon so that size is never 0 for strips\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\tconst
       float4x4 elementToVFX = GetElementToVFXMatrix(\n\t\t\t\t\tattributes.axisX,\n\t\t\t\t\tattributes.axisY,\n\t\t\t\t\tattributes.axisZ,\n\t\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\n\t\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\n\t\t\t\t\tsize3,\n\t\t\t\t\tattributes.position);\n\t\t\t\t\t\n\t\t\t\tfloat3
       inputVertexPosition = float3(vOffsets, 0.0f);\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(inputVertexPosition,
       1.0f)).xyz;\n\t\t\t\n\t\t\t\to.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);\n\t\t\t   
@@ -2372,7 +2414,7 @@ VisualEffectResource:
       VFX_VARYING_BENTFACTORS\n\t\t\t\t\n\t\t\t\t#if HAS_STRIPS\n\t\t\t\t#define
       BENT_FACTOR_MULTIPLIER 2.0f\n\t\t\t\t#else\n\t\t\t\t#define BENT_FACTOR_MULTIPLIER
       1.41421353816986083984375f\n\t\t\t\t#endif\n\t\t\t\to.VFX_VARYING_BENTFACTORS
-      = vOffsets * bentNormalFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      = vOffsets * normalBendingFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
       defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] =
       float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor (int
@@ -2394,7 +2436,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -2427,9 +2470,9 @@ VisualEffectResource:
       SV_POSITION;\n\t\t\t\t#if USE_FLIPBOOK_INTERPOLATION\n\t\t\t\tfloat4 uv : TEXCOORD0;\n\t\t\t\t#else\n\t\t\t\tfloat2
       uv : TEXCOORD0;\t\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_COLOR_INTERPOLATOR\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float4 color : COLOR0;\n\t\t\t\t#endif\n\t\t\t\t#if USE_SOFT_PARTICLE || USE_ALPHA_TEST
-      || USE_FLIPBOOK_INTERPOLATION || USE_EXPOSURE_WEIGHT\n\t\t\t\t// x: inverse
-      soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t// z:
-      frame blending factor\n\t\t\t\t// w: exposure weight\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
+      || USE_FLIPBOOK_INTERPOLATION || USE_EXPOSURE_WEIGHT || WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t//
+      x: inverse soft particles fade distance\n\t\t\t\t// y: alpha threshold\n\t\t\t\t//
+      z: frame blending factor\n\t\t\t\t// w: exposure weight\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float4 builtInInterpolants : TEXCOORD1;\n\t\t\t\t#endif\n\t\t\t\t#if USE_FLIPBOOK_MOTIONVECTORS\n\t\t\t\t//
       x: motion vectors scale X\n\t\t\t\t// y: motion vectors scale Y\n\t\t\t\tVFX_OPTIONAL_INTERPOLATION
       float2 builtInInterpolants2 : TEXCOORD2;\n\t\t\t\t#endif\n\t\t\t\t#if VFX_NEEDS_POSWS_INTERPOLATOR\n\t\t\t\tfloat3
@@ -2448,11 +2491,12 @@ VisualEffectResource:
       VFX_VARYING_POSWS posWS\n\t\t#endif\n\t\t#if USE_EXPOSURE_WEIGHT\n\t\t#define
       VFX_VARYING_EXPOSUREWEIGHT builtInInterpolants.w\n\t\t#endif\n\t\t#if WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t#define
       VFX_VARYING_VELOCITY_CPOS cPosNonJiterred\n\t\t#define VFX_VARYING_VELOCITY_CPOS_PREVIOUS
-      cPosPrevious\n\t\t#endif\n\t\t\n\t\t#if SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t#define
-      VFX_VARYING_NORMAL normal\n\t\t#endif\n\t\t#if SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t#define
-      VFX_VARYING_TANGENT tangent\n\t\t#endif\n\t\t\t\t\n\t\t\t#if !(defined(VFX_VARYING_PS_INPUTS)
-      && defined(VFX_VARYING_POSCS))\n\t\t\t#error VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS
-      and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
+      cPosPrevious\n\t\t#endif\n\t\t\n\t\t#define SHADERPASS SHADERPASS_FORWARD_UNLIT\n\t\t\t\n\t\t#if
+      SHADERGRAPH_NEEDS_NORMAL_FORWARD\n\t\t#define VFX_VARYING_NORMAL normal\n\t\t#endif\n\t\t#if
+      SHADERGRAPH_NEEDS_TANGENT_FORWARD\n\t\t#define VFX_VARYING_TANGENT tangent\n\t\t#endif\n\t\t\t\t\n\t\t\t#if
+      !(defined(VFX_VARYING_PS_INPUTS) && defined(VFX_VARYING_POSCS))\n\t\t\t#error
+      VFX_VARYING_PS_INPUTS, VFX_VARYING_POSCS and VFX_VARYING_UV must be defined.\n\t\t\t#endif\n\t\t\t\n\t\t\t#include
+      \"Packages/com.unity.render-pipelines.high-definition/Runtime/VFXGraph/Shaders/VFXCommon.hlsl\"\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommon.hlsl\"\n\t\t\t\n\n\t\t\tvoid
       SetAttribute_FDD06EC7(inout float3 color, float3 Color) /*attribute:color Composition:Overwrite
       Source:Slot Random:Off channels:XYZ */\n\t\t\t{\n\t\t\t    color = Color;\n\t\t\t}\n\t\t\tvoid
@@ -2524,11 +2568,11 @@ VisualEffectResource:
       * 0x8 + 0x104) << 2));\n\t\t\t\t\t\tattributes.stripIndex = (uint)0;\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t//
       Initialize built-in needed attributes\n\t\t\t\t\t\t#if HAS_STRIPS\n\t\t\t\t\t\tInitStripAttributes(index,
       attributes, stripData);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\t\n\t\t\t\t{\n\t\t\t\t   
-      uint tmp_bc = attributes.stripIndex ^ asuint(uniform_b);\n\t\t\t\t    float
+      uint tmp_bc = attributes.stripIndex ^ asuint(uniform_a);\n\t\t\t\t    float
       tmp_bd = FixedRand(tmp_bc);\n\t\t\t\t    float tmp_bf = tmp_bd * (float)0.400000006;\n\t\t\t\t   
       float tmp_bg = attributes.age / attributes.lifetime;\n\t\t\t\t    float tmp_bi
       = tmp_bg * (float)0.200000003;\n\t\t\t\t    float tmp_bj = tmp_bf + tmp_bi;\n\t\t\t\t   
-      float tmp_bk = tmp_bj + uniform_c;\n\t\t\t\t    float tmp_bl = frac(tmp_bk);\n\t\t\t\t   
+      float tmp_bk = tmp_bj + uniform_b;\n\t\t\t\t    float tmp_bl = frac(tmp_bk);\n\t\t\t\t   
       float3 tmp_bo = float3(tmp_bl, (float)1, (float)0.75);\n\t\t\t\t    float3
       tmp_bp = HSVtoRGB(tmp_bo);\n\t\t\t\t    float tmp_bq = tmp_bp[0];\n\t\t\t\t   
       float tmp_br = tmp_bp[1];\n\t\t\t\t    float tmp_bs = tmp_bp[2];\n\t\t\t\t   
@@ -2538,17 +2582,19 @@ VisualEffectResource:
       /*inout */attributes.size, attributes.age, attributes.lifetime, Size_c);\n\t\t\t\t\n\n\t\t\t\t\n\t\t\t#if
       !HAS_STRIPS\n\t\t\t\tif (!attributes.alive)\n\t\t\t\t\treturn o;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#if
       VFX_PRIMITIVE_QUAD\n\t\t\t\n\t\t\t#if HAS_STRIPS\n\t\t\t#if VFX_STRIPS_UV_STRECHED\n\t\t\t\to.VFX_VARYING_UV.x
-      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
-      = PARTICLE_IN_EDGE;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id
-      & 2) >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y
-      - 0.5f);\n\t\t\t\t\n\t\t\t\t// Orient strips along their tangents\n\t\t\t\tattributes.axisX
-      = GetStripTangent(attributes.position, currentIndex, stripData);\n\t\t\t#if
-      !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ = attributes.position -
-      GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY = normalize(cross(attributes.axisZ,
-      attributes.axisX));\n\t\t\t\tattributes.axisZ = normalize(cross(attributes.axisX,
-      attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x = float(id
-      & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst float2
-      vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
+      = (float)(currentIndex) / (stripData.nextIndex - 1);\n\t\t\t#elif VFX_STRIPS_UV_PER_SEGMENT\n\t\t\t\to.VFX_VARYING_UV.x
+      = PARTICLE_IN_EDGE;\n\t\t\t#else\n\t\t\t\t\n\t\t\t    o.VFX_VARYING_UV.x =
+      texCoord;\n\t\t\t#endif\n\t\t\t\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2)
+      >> 1);\n\t\t\t\tconst float2 vOffsets = float2(0.0f,o.VFX_VARYING_UV.y - 0.5f);\n\t\t\t\t\n\t\t\t#if
+      VFX_STRIPS_SWAP_UV\n\t\t\t\to.VFX_VARYING_UV.xy = float2(1.0f - o.VFX_VARYING_UV.y,
+      o.VFX_VARYING_UV.x);\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\t// Orient strips along
+      their tangents\n\t\t\t\tattributes.axisX = GetStripTangent(attributes.position,
+      currentIndex, stripData);\n\t\t\t#if !VFX_STRIPS_ORIENT_CUSTOM\n\t\t\t\tattributes.axisZ
+      = attributes.position - GetViewVFXPosition();\n\t\t\t#endif\n\t\t\t\tattributes.axisY
+      = normalize(cross(attributes.axisZ, attributes.axisX));\n\t\t\t\tattributes.axisZ
+      = normalize(cross(attributes.axisX, attributes.axisY));\n\t\t\t\t\n\t\t\t#else\n\t\t\t\to.VFX_VARYING_UV.x
+      = float(id & 1);\n\t\t\t\to.VFX_VARYING_UV.y = float((id & 2) >> 1);\n\t\t\t\tconst
+      float2 vOffsets = o.VFX_VARYING_UV.xy - 0.5f;\n\t\t\t#endif\n\t\t\t\t\n\t\t\t#elif
       VFX_PRIMITIVE_TRIANGLE\n\t\t\t\n\t\t\t\tconst float2 kOffsets[] = {\n\t\t\t\t\tfloat2(-0.5f,
       \t-0.288675129413604736328125f),\n\t\t\t\t\tfloat2(0.0f, \t0.57735025882720947265625f),\n\t\t\t\t\tfloat2(0.5f,\t-0.288675129413604736328125f),\n\t\t\t\t};\n\t\t\t\t\n\t\t\t\tconst
       float kUVScale = 0.866025388240814208984375f;\n\t\t\t\t\n\t\t\t\tconst float2
@@ -2560,7 +2606,9 @@ VisualEffectResource:
       size3 = float3(attributes.size,attributes.size,attributes.size);\n\t\t\t\t\t\t#if
       VFX_USE_SCALEX_CURRENT\n\t\t\t\t\t\tsize3.x *= attributes.scaleX;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
       VFX_USE_SCALEY_CURRENT\n\t\t\t\t\t\tsize3.y *= attributes.scaleY;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#if
-      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\n\t\t\t\tconst
+      VFX_USE_SCALEZ_CURRENT\n\t\t\t\t\t\tsize3.z *= attributes.scaleZ;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t#if
+      HAS_STRIPS\n\t\t\t\tsize3 += size3 < 0.0f ? -VFX_EPSILON : VFX_EPSILON; //
+      Add an epsilon so that size is never 0 for strips\n\t\t\t#endif\n\t\t\t\t\n\t\t\t\tconst
       float4x4 elementToVFX = GetElementToVFXMatrix(\n\t\t\t\t\tattributes.axisX,\n\t\t\t\t\tattributes.axisY,\n\t\t\t\t\tattributes.axisZ,\n\t\t\t\t\tfloat3(attributes.angleX,attributes.angleY,attributes.angleZ),\n\t\t\t\t\tfloat3(attributes.pivotX,attributes.pivotY,attributes.pivotZ),\n\t\t\t\t\tsize3,\n\t\t\t\t\tattributes.position);\n\t\t\t\t\t\n\t\t\t\tfloat3
       inputVertexPosition = float3(vOffsets, 0.0f);\n\t\t\t\tfloat3 vPos = mul(elementToVFX,float4(inputVertexPosition,
       1.0f)).xyz;\n\t\t\t\n\t\t\t\to.VFX_VARYING_POSCS = TransformPositionVFXToClip(vPos);\n\t\t\t   
@@ -2573,7 +2621,7 @@ VisualEffectResource:
       VFX_VARYING_BENTFACTORS\n\t\t\t\t\n\t\t\t\t#if HAS_STRIPS\n\t\t\t\t#define
       BENT_FACTOR_MULTIPLIER 2.0f\n\t\t\t\t#else\n\t\t\t\t#define BENT_FACTOR_MULTIPLIER
       1.41421353816986083984375f\n\t\t\t\t#endif\n\t\t\t\to.VFX_VARYING_BENTFACTORS
-      = vOffsets * bentNormalFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
+      = vOffsets * normalBendingFactor * BENT_FACTOR_MULTIPLIER;\n\t\t\t\t#endif\n\t\t\t\t\n\t\t\t\t\n\t\t\t\t\t\t#if
       defined(VFX_VARYING_VELOCITY_CPOS) && defined(VFX_VARYING_VELOCITY_CPOS_PREVIOUS)\n\t\t\t\t\t\tfloat4x4
       previousElementToVFX = (float4x4)0;\n\t\t\t\t\t\tpreviousElementToVFX[3] =
       float4(0,0,0,1);\n\t\t\t\t\t\t\n\t\t\t\t\t\tUNITY_UNROLL\n\t\t\t\t\t\tfor (int
@@ -2595,7 +2643,8 @@ VisualEffectResource:
       = exposureWeight;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_SOFT_PARTICLE
       && defined(VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_INVSOFTPARTICLEFADEDISTANCE
       = invSoftParticlesFadeDistance;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
-      USE_ALPHA_TEST && defined(VFX_VARYING_ALPHATHRESHOLD) && ! VFX_SHADERGRAPH\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
+      (USE_ALPHA_TEST || WRITE_MOTION_VECTOR_IN_FORWARD) && (!VFX_SHADERGRAPH ||
+      !HAS_SHADERGRAPH_PARAM_ALPHATHRESHOLD) && defined(VFX_VARYING_ALPHATHRESHOLD)\n\t\t\t\t\t\t\n\t\t\t\t\t\to.VFX_VARYING_ALPHATHRESHOLD
       = alphaThreshold;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if USE_UV_SCALE_BIAS\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
       defined (VFX_VARYING_UV)\n\t\t\t\t\t\to.VFX_VARYING_UV.xy = o.VFX_VARYING_UV.xy
       * uvScale + uvBias;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t#if
@@ -2608,8 +2657,8 @@ VisualEffectResource:
       = motionVectorScale * invFlipBookSize;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\n\t\t\t\t\n\t\t\t   
       \n\t\t\t    \n\t\t\t\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t\t#include
       \"Packages/com.unity.visualeffectgraph/Shaders/VFXCommonOutput.hlsl\"\n\t\t\t\n\t\t\t\n\t\t\t\n\t\t#if
-      VFX_SHADERGRAPH            \n\t\t    \n\t\t#endif\n\t\t\t\t\n\t\t\t#pragma
-      fragment frag\n\t\t\tps_output frag(ps_input i)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tps_output
+      VFX_SHADERGRAPH\n\t\t\t\n\t\t#endif\n\t\t\t\t\n\t\t\t#pragma fragment frag\n\t\t\tps_output
+      frag(ps_input i)\n\t\t\t{\n\t\t\t\tUNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(i);\n\t\t\t\tps_output
       o = (ps_output)0;\n\t\t\t\tVFXTransformPSInputs(i);\n\t\t\t\t\n\t\t\t\t\t\t\t#ifdef
       VFX_VARYING_NORMAL\n\t\t\t\t\t\t\t#if USE_DOUBLE_SIDED\n\t\t\t\t\t\t\tconst
       float faceMul = frontFace ? 1.0f : -1.0f;\n\t\t\t\t\t\t\t#else\n\t\t\t\t\t\t\tconst
@@ -2638,13 +2687,14 @@ VisualEffectResource:
       VFX_COLORMAPPING_GRADIENTMAPPED\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\to.color = SampleGradient(gradient,
       VFX_TEXTURE_COLOR.a * color.a) * float4(color.rgb,1.0);\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\to.color
       = VFXApplyPreExposure(o.color, i);\n\t\t#endif\n\t\t\n\t\t\t\to.color = VFXApplyFog(o.color,i);\n\t\t\t\tVFXClipFragmentColor(o.color.a,i);\n\t\t\t\to.color.a
-      = saturate(o.color.a);\n\t\t        o.color = VFXTransformFinalColor(o.color);\n\t\t\t\t\n\t\t#if
+      = saturate(o.color.a);\n\t\t\t\to.color = VFXTransformFinalColor(o.color);\n\t\t\t\t\n\t\t#if
       WRITE_MOTION_VECTOR_IN_FORWARD\n\t\t\t\t\n\t\t\t\t\t\tfloat2 velocity = (i.VFX_VARYING_VELOCITY_CPOS.xy/i.VFX_VARYING_VELOCITY_CPOS.w)
       - (i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.xy/i.VFX_VARYING_VELOCITY_CPOS_PREVIOUS.w);\n\t\t\t\t\t\t#if
       UNITY_UV_STARTS_AT_TOP\n\t\t\t\t\t\t\tvelocity.y = -velocity.y;\n\t\t\t\t\t\t#endif\n\t\t\t\t\t\tfloat4
       encodedMotionVector = 0.0f;\n\t\t\t\t\t\tVFXEncodeMotionVector(velocity * 0.5f,
-      encodedMotionVector);\n\t\t\t\t\t\t\n\t\t\t\to.outMotionVector = encodedMotionVector;\n\t\t#endif\n\t\t\t\treturn
-      o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
+      encodedMotionVector);\n\t\t\t\t\t\t\n\t\t\t\to.outMotionVector = encodedMotionVector;\n\t\t       
+      o.outMotionVector.a = o.color.a < i.VFX_VARYING_ALPHATHRESHOLD ? 0.0f : 1.0f;
+      //Independant clipping for motion vector pass\n\t\t#endif\n\t\t\t\treturn o;\n\t\t\t}\n\t\t\tENDHLSL\n\t\t}\n\t\t\n\r\n\t\t\r\n\t}\r\n}\r\n"
   m_Infos:
     m_Expressions:
       m_Expressions:
@@ -3536,7 +3586,7 @@ VisualEffectResource:
         index: 0
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 14
       - nameId: Position_b
         index: 34
@@ -3585,9 +3635,9 @@ VisualEffectResource:
         index: 7
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 6
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 2
       params:
       - nameId: bounds_center
@@ -3604,7 +3654,7 @@ VisualEffectResource:
         index: 5
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 37
       - nameId: deltaTime_b
         index: 48
@@ -3665,7 +3715,7 @@ VisualEffectResource:
         index: 3
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 20
       params:
       - nameId: bounds_center
@@ -3688,7 +3738,7 @@ VisualEffectResource:
         index: 46
       - nameId: FieldTransform_a
         index: 41
-      - nameId: uniform_d
+      - nameId: uniform_a
         index: 36
       - nameId: deltaTime_a
         index: 48
@@ -3703,9 +3753,9 @@ VisualEffectResource:
         index: 3
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 8
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 16
       - nameId: mainTexture
         index: 43
@@ -3747,11 +3797,11 @@ VisualEffectResource:
         index: 10
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 37
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 6
-      - nameId: uniform_d
+      - nameId: uniform_c
         index: 2
       params:
       - nameId: bounds_center
@@ -3768,7 +3818,7 @@ VisualEffectResource:
         index: 11
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 31
       - nameId: deltaTime_a
         index: 48
@@ -3781,9 +3831,9 @@ VisualEffectResource:
         index: 4
       temporaryBuffers: []
       values:
-      - nameId: uniform_b
+      - nameId: uniform_a
         index: 8
-      - nameId: uniform_c
+      - nameId: uniform_b
         index: 16
       - nameId: Size_c
         index: 44
@@ -4754,6 +4804,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
@@ -5103,7 +5159,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The uniform size of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616050}
@@ -5686,6 +5748,12 @@ MonoBehaviour:
       m_Min: -Infinity
       m_Max: Infinity
       m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The color of the particle.
       m_Regex: 
       m_RegexMaxLength: 0
   m_Direction: 0
@@ -6426,7 +6494,14 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: "Indicates how long the particle can stay alive. If the particle\u2019s
+        age exceeds its lifetime, the particle is destroyed."
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616511}
@@ -7036,6 +7111,7 @@ MonoBehaviour:
   m_OutputSlots:
   - {fileID: 8926484042661616229}
   attribute: BasePosition
+  location: 0
   AttributeType: 2
 --- !u!114 &8926484042661616229
 MonoBehaviour:
@@ -7910,7 +7986,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: UnityEditor.VFX.Position, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The current position of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616845}
@@ -8733,6 +8815,7 @@ MonoBehaviour:
   shaderGraph: {fileID: 0}
   shadergraphGUID: 
   tilingMode: 0
+  swapUV: 0
   UseCustomZAxis: 0
 --- !u!114 &8926484042661616513
 MonoBehaviour:
@@ -8968,7 +9051,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: UnityEditor.VFX.Position, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The current position of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616196}
@@ -9215,6 +9304,12 @@ MonoBehaviour:
       m_Tooltip: 
       m_Regex: 
       m_RegexMaxLength: 0
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The color of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616853}
@@ -9382,6 +9477,12 @@ MonoBehaviour:
       m_Min: -Infinity
       m_Max: Infinity
       m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The color of the particle.
       m_Regex: 
       m_RegexMaxLength: 0
   m_Direction: 0
@@ -10150,6 +10251,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
@@ -11559,7 +11666,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The uniform size of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661616640
@@ -12437,7 +12550,14 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: "Indicates how long the particle can stay alive. If the particle\u2019s
+        age exceeds its lifetime, the particle is destroyed."
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661616667
@@ -12471,7 +12591,14 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: System.Single, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: "Indicates how long the particle can stay alive. If the particle\u2019s
+        age exceeds its lifetime, the particle is destroyed."
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots: []
 --- !u!114 &8926484042661616668
@@ -13837,7 +13964,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: UnityEditor.VFX.Position, Unity.VisualEffectGraph.Editor,
         Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The current position of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616868}
@@ -14184,7 +14317,13 @@ MonoBehaviour:
     m_serializedType:
       m_SerializableType: UnityEngine.Vector3, UnityEngine.CoreModule, Version=0.0.0.0,
         Culture=neutral, PublicKeyToken=null
-    attributes: []
+    attributes:
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The current position of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 1
   m_LinkedSlots:
   - {fileID: 8926484042661616791}
@@ -14531,6 +14670,12 @@ MonoBehaviour:
       m_SerializableType: System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral,
         PublicKeyToken=b77a5c561934e089
     attributes:
+    - m_Type: 0
+      m_Min: 1
+      m_Max: 8
+      m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
     - m_Type: 3
       m_Min: -Infinity
       m_Max: Infinity
@@ -16289,6 +16434,12 @@ MonoBehaviour:
       m_Tooltip: 
       m_Regex: 
       m_RegexMaxLength: 0
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The color of the particle.
+      m_Regex: 
+      m_RegexMaxLength: 0
   m_Direction: 0
   m_LinkedSlots:
   - {fileID: 8926484042661616853}
@@ -16456,6 +16607,12 @@ MonoBehaviour:
       m_Min: -Infinity
       m_Max: Infinity
       m_Tooltip: 
+      m_Regex: 
+      m_RegexMaxLength: 0
+    - m_Type: 3
+      m_Min: -Infinity
+      m_Max: Infinity
+      m_Tooltip: The color of the particle.
       m_Regex: 
       m_RegexMaxLength: 0
   m_Direction: 0
