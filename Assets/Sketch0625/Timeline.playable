@@ -979,7 +979,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   template:
     positionAmount: {x: 0.05, y: 0.05, z: 0.05}
-    rotationAmount: {x: 5, y: 5, z: 5}
+    rotationAmount: {x: 5, y: 5, z: 40}
     frequency: 0.2
     octaves: 3
     randomSeed: 300
@@ -1228,7 +1228,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   template:
     positionAmount: {x: 0.05, y: 0.05, z: 0.05}
-    rotationAmount: {x: 5, y: 5, z: 5}
+    rotationAmount: {x: 5, y: 5, z: 40}
     frequency: 0.2
     octaves: 3
     randomSeed: 231
