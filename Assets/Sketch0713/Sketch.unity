@@ -376,8 +376,6 @@ PlayableDirector:
     value: {fileID: 1237612753}
   - key: {fileID: -2149240669515638196, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
     value: {fileID: 1162551636}
-  - key: {fileID: -7425716902309124295, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
-    value: {fileID: 0}
   - key: {fileID: 3348677581528446529, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
     value: {fileID: 0}
   m_ExposedReferences:
@@ -629,8 +627,8 @@ VisualEffect:
   m_Asset: {fileID: 8926484042661614526, guid: 2e0f674bb43231846b35829bc13f6217, type: 3}
   m_InitialEventName: OnPlay
   m_InitialEventNameOverriden: 0
-  m_StartSeed: 0
-  m_ResetSeedOnPlay: 1
+  m_StartSeed: 1587242551
+  m_ResetSeedOnPlay: 0
   m_PropertySheet:
     m_Float:
       m_Array:
@@ -877,8 +875,8 @@ VisualEffect:
   m_Asset: {fileID: 8926484042661614526, guid: af1839c0c0362de489207619df2761fc, type: 3}
   m_InitialEventName: OnPlay
   m_InitialEventNameOverriden: 0
-  m_StartSeed: 0
-  m_ResetSeedOnPlay: 1
+  m_StartSeed: 2143725635
+  m_ResetSeedOnPlay: 0
   m_PropertySheet:
     m_Float:
       m_Array:
