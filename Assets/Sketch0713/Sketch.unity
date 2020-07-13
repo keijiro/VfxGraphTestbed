@@ -360,7 +360,7 @@ PlayableDirector:
   serializedVersion: 3
   m_PlayableAsset: {fileID: 11400000, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
   m_InitialState: 1
-  m_WrapMode: 1
+  m_WrapMode: 2
   m_DirectorUpdateMode: 1
   m_InitialTime: 0
   m_SceneBindings:
@@ -377,6 +377,8 @@ PlayableDirector:
   - key: {fileID: -2149240669515638196, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
     value: {fileID: 1162551636}
   - key: {fileID: -7425716902309124295, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
+    value: {fileID: 0}
+  - key: {fileID: 3348677581528446529, guid: 5a2427019f3595f4887eaa98ecdb09e1, type: 2}
     value: {fileID: 0}
   m_ExposedReferences:
     m_References: []
@@ -883,7 +885,7 @@ VisualEffect:
       - m_Value: 1
         m_Name: Turbulence
         m_Overridden: 1
-      - m_Value: 0.97
+      - m_Value: 0
         m_Name: ParticleSize
         m_Overridden: 1
     m_Vector2f:
