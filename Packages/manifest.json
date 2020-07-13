@@ -10,6 +10,11 @@
   ],
   "dependencies": {
     "jp.keijiro.kino.post-processing": "2.1.13",
-    "jp.keijiro.klak.timeline.procedural-motion": "0.1.3"
+    "jp.keijiro.klak.timeline.procedural-motion": "0.1.3",
+    "com.unity.modules.director": "1.0.0",
+    "com.unity.modules.imageconversion": "1.0.0",
+    "com.unity.modules.particlesystem": "1.0.0",
+    "com.unity.modules.physics": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0"
   }
 }
