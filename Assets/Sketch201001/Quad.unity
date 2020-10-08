@@ -251,13 +251,13 @@ VisualEffect:
       - m_Value: 0
         m_Name: Alpha
         m_Overridden: 1
-      - m_Value: 0
+      - m_Value: 1
         m_Name: Texture
         m_Overridden: 1
-      - m_Value: 1
+      - m_Value: 0
         m_Name: Displacement
         m_Overridden: 1
-      - m_Value: 1
+      - m_Value: 0
         m_Name: Saturation
         m_Overridden: 1
     m_Vector2f:
@@ -454,7 +454,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   volumeAnchorOverride: {fileID: 0}
-  antialiasing: 0
+  antialiasing: 3
   SMAAQuality: 2
   dithering: 1
   stopNaNs: 0
