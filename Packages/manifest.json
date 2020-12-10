@@ -9,12 +9,14 @@
     }
   ],
   "dependencies": {
+    "com.unity.render-pipelines.high-definition": "10.2.2",
+    "com.unity.timeline": "1.4.5",
+    "jp.keijiro.kino.post-processing": "2.1.15",
+    "jp.keijiro.klak.timeline.procedural-motion": "1.0.1",
+    "jp.keijiro.test-assets": "1.0.1",
     "com.unity.modules.imageconversion": "1.0.0",
     "com.unity.modules.physics": "1.0.0",
     "com.unity.modules.uielements": "1.0.0",
-    "jp.keijiro.kino.post-processing": "2.1.15",
-    "jp.keijiro.klak.timeline.procedural-motion": "1.0.0",
-    "jp.keijiro.recorder.ffmpeg": "1.0.2",
-    "jp.keijiro.test-assets": "1.0.1"
+    "com.unity.modules.video": "1.0.0"
   }
 }
