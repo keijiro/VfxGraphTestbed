@@ -113,6 +113,22 @@
       },
       "url": "https://registry.npmjs.com"
     },
+    "jp.keijiro.metamesh": {
+      "version": "0.0.7",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.mathematics": "1.1.0"
+      },
+      "url": "https://registry.npmjs.com"
+    },
+    "jp.keijiro.noiseshader": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://registry.npmjs.com"
+    },
     "jp.keijiro.test-assets": {
       "version": "1.0.1",
       "depth": 0,

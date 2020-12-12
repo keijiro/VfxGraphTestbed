@@ -14,6 +14,8 @@
     "jp.keijiro.kino.post-processing": "2.1.15",
     "jp.keijiro.klak.motion": "1.0.1",
     "jp.keijiro.klak.timeline.procedural-motion": "1.0.1",
+    "jp.keijiro.metamesh": "0.0.7",
+    "jp.keijiro.noiseshader": "1.0.0",
     "jp.keijiro.test-assets": "1.0.1",
     "com.unity.modules.imageconversion": "1.0.0",
     "com.unity.modules.physics": "1.0.0",
