@@ -34,7 +34,7 @@ ScriptedImporter:
     TopRadius: 1
     BottomRadius: 0.5
     Height: 1
-    Columns: 24
+    Columns: 32
     Rows: 12
     Axis: 1
     Caps: 0
